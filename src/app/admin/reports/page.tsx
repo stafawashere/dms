@@ -127,7 +127,7 @@ export default function ReportsPage() {
                         <Tooltip
                            contentStyle={{ backgroundColor: "#27272a", border: "1px solid #3f3f46", borderRadius: "8px" }}
                            labelStyle={{ color: "#a1a1aa" }}
-                           formatter={(value: number) => formatPrice(value)}
+                           formatter={(value) => formatPrice(Number(value))}
                            labelFormatter={(label) => new Date(label).toLocaleDateString()}
                         />
                         <Legend />
@@ -163,7 +163,7 @@ export default function ReportsPage() {
                            </Pie>
                            <Tooltip
                               contentStyle={{ backgroundColor: "#27272a", border: "1px solid #3f3f46", borderRadius: "8px" }}
-                              formatter={(value: number) => formatPrice(value)}
+                              formatter={(value) => formatPrice(Number(value))}
                            />
                         </PieChart>
                      </ResponsiveContainer>
@@ -184,7 +184,7 @@ export default function ReportsPage() {
                            <YAxis stroke="#71717a" fontSize={12} tickFormatter={(v) => `$${v}`} />
                            <Tooltip
                               contentStyle={{ backgroundColor: "#27272a", border: "1px solid #3f3f46", borderRadius: "8px" }}
-                              formatter={(value: number) => formatPrice(value)}
+                              formatter={(value) => formatPrice(Number(value))}
                            />
                            <Bar dataKey="revenue" fill="#a1a1aa" radius={[4, 4, 0, 0]} />
                         </BarChart>

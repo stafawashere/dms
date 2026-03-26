@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search, X, Filter } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, Filter, Upload, ImageIcon, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,6 +78,9 @@ type ProductForm = {
    priceTiers: TierForm[];
 };
 
+type SortKey = "name" | "costPrice" | "sellPrice" | "markup" | null;
+type SortDir = "asc" | "desc";
+
 const emptyTier: TierForm = { minQty: "", maxQty: "", costPrice: "", sellPrice: "" };
 
 const emptyForm: ProductForm = {
@@ -102,6 +105,52 @@ export default function ProductsPage() {
    const [tierProduct, setTierProduct] = useState<Product | null>(null);
    const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set());
    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+   const [uploading, setUploading] = useState(false);
+   const [sortKey, setSortKey] = useState<SortKey>(null);
+   const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+   function toggleSort(key: SortKey) {
+      if (sortKey === key) {
+         if (sortDir === "asc") setSortDir("desc");
+         else { setSortKey(null); setSortDir("asc"); }
+      } else {
+         setSortKey(key);
+         setSortDir("asc");
+      }
+   }
+
+   function SortIcon({ col }: { col: SortKey }) {
+      if (sortKey !== col) return <ArrowUpDown className="size-[11px] text-muted-foreground" />;
+      return sortDir === "asc"
+         ? <ArrowUp className="size-[11px] text-primary" />
+         : <ArrowDown className="size-[11px] text-primary" />;
+   }
+
+   async function handleThumbnailUpload(e: React.ChangeEvent<HTMLInputElement>) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (res.ok) {
+         const { url } = await res.json();
+         setForm((prev) => ({ ...prev, thumbnail: url }));
+      }
+      setUploading(false);
+      e.target.value = "";
+   }
+
+   async function removeThumbnail() {
+      if (form.thumbnail) {
+         await fetch("/api/upload", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: form.thumbnail }),
+         });
+         setForm((prev) => ({ ...prev, thumbnail: "" }));
+      }
+   }
 
    useEffect(() => {
       let ignore = false;
@@ -221,12 +270,28 @@ export default function ProductsPage() {
       setForm((prev) => ({ ...prev, [field]: value }));
    }
 
-   const filtered = products.filter((p) => {
-      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-         p.category.name.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = categoryFilter.size === 0 || categoryFilter.has(p.categoryId);
-      return matchesSearch && matchesCategory;
-   });
+   const getMarkup = (p: Product) =>
+      p.costPrice > 0 ? (p.sellPrice - p.costPrice) / p.costPrice * 100 : 0;
+
+   const filtered = products
+      .filter((p) => {
+         const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+            p.category.name.toLowerCase().includes(search.toLowerCase());
+         const matchesCategory = categoryFilter.size === 0 || categoryFilter.has(p.categoryId);
+         return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => {
+         if (!sortKey) return 0;
+         let aVal: number | string = 0;
+         let bVal: number | string = 0;
+         if (sortKey === "name") { aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); }
+         else if (sortKey === "costPrice") { aVal = a.costPrice; bVal = b.costPrice; }
+         else if (sortKey === "sellPrice") { aVal = a.sellPrice; bVal = b.sellPrice; }
+         else if (sortKey === "markup") { aVal = getMarkup(a); bVal = getMarkup(b); }
+         if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+         if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+         return 0;
+      });
 
    function toggleCategoryFilter(categoryId: string) {
       setCategoryFilter((prev) => {
@@ -271,7 +336,11 @@ export default function ProductsPage() {
             <Table>
                <TableHeader>
                   <TableRow>
-                     <TableHead>Name</TableHead>
+                     <TableHead>
+                        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("name")}>
+                           Name <SortIcon col="name" />
+                        </button>
+                     </TableHead>
                      <TableHead>
                         <div className="flex items-center gap-1">
                            Category
@@ -285,7 +354,7 @@ export default function ProductsPage() {
                                     />
                                  }
                               >
-                                 <Filter className={cn("size-[11px]", categoryFilter.size > 0 && "text-primary")} />
+                                 <Filter className={cn("size-[11px]", categoryFilter.size > 0 ? "text-primary" : "text-muted-foreground")} />
                               </PopoverTrigger>
                               <PopoverContent align="start" className="w-48">
                                  <div className="flex flex-col gap-2">
@@ -315,9 +384,21 @@ export default function ProductsPage() {
                         </div>
                      </TableHead>
                      <TableHead>Unit</TableHead>
-                     <TableHead className="text-right">Cost</TableHead>
-                     <TableHead className="text-right">Sell</TableHead>
-                     <TableHead className="text-right">Markup</TableHead>
+                     <TableHead className="text-right">
+                        <button className="ml-auto flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("costPrice")}>
+                           Cost <SortIcon col="costPrice" />
+                        </button>
+                     </TableHead>
+                     <TableHead className="text-right">
+                        <button className="ml-auto flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("sellPrice")}>
+                           Sell <SortIcon col="sellPrice" />
+                        </button>
+                     </TableHead>
+                     <TableHead className="text-right">
+                        <button className="ml-auto flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("markup")}>
+                           Markup <SortIcon col="markup" />
+                        </button>
+                     </TableHead>
                      <TableHead className="text-center">Bulk</TableHead>
                      <TableHead className="w-24 text-right">Actions</TableHead>
                   </TableRow>
@@ -337,12 +418,25 @@ export default function ProductsPage() {
                      </TableRow>
                   ) : (
                      filtered.map((product) => {
-                        const margin = product.sellPrice > 0
-                           ? ((product.sellPrice - product.costPrice) / product.costPrice * 100).toFixed(1)
-                           : "0";
+                        const margin = getMarkup(product).toFixed(1);
                         return (
                            <TableRow key={product.id}>
-                              <TableCell className="font-medium">{product.name}</TableCell>
+                              <TableCell className="font-medium">
+                                 <div className="flex items-center gap-3">
+                                    {product.thumbnail ? (
+                                       <img
+                                          src={product.thumbnail}
+                                          alt={product.name}
+                                          className="h-8 w-8 rounded object-cover"
+                                       />
+                                    ) : (
+                                       <div className="flex h-8 w-8 items-center justify-center rounded bg-muted">
+                                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                                       </div>
+                                    )}
+                                    {product.name}
+                                 </div>
+                              </TableCell>
                               <TableCell>
                                  <Badge variant="secondary">{product.category.name}</Badge>
                               </TableCell>
@@ -402,6 +496,15 @@ export default function ProductsPage() {
                         placeholder="Product name"
                      />
                   </div>
+                  <div className="flex flex-col gap-2">
+                     <Label htmlFor="description">Description</Label>
+                     <Input
+                        id="description"
+                        value={form.description}
+                        onChange={(e) => updateForm("description", e.target.value)}
+                        placeholder="Optional description"
+                     />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                      <div className="flex flex-col gap-2">
                         <Label>Category</Label>
@@ -458,15 +561,6 @@ export default function ProductsPage() {
                            placeholder="0.00"
                         />
                      </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                     <Label htmlFor="description">Description</Label>
-                     <Input
-                        id="description"
-                        value={form.description}
-                        onChange={(e) => updateForm("description", e.target.value)}
-                        placeholder="Optional description"
-                     />
                   </div>
 
                   <div className="flex flex-col gap-3">
@@ -540,6 +634,45 @@ export default function ProductsPage() {
                            ))}
                         </div>
                      )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                     <Label>Thumbnail</Label>
+                     <div className="flex items-center gap-3">
+                        {form.thumbnail ? (
+                           <div className="relative h-20 w-20 rounded-md border border-border/40 overflow-hidden">
+                              <img
+                                 src={form.thumbnail}
+                                 alt="Thumbnail"
+                                 className="h-full w-full object-cover"
+                              />
+                              <button
+                                 type="button"
+                                 onClick={removeThumbnail}
+                                 className="absolute top-0.5 right-0.5 rounded-full bg-black/60 p-0.5"
+                              >
+                                 <X className="h-3 w-3 text-white" />
+                              </button>
+                           </div>
+                        ) : (
+                           <div className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-border/60">
+                              <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                           </div>
+                        )}
+                        <label className="cursor-pointer">
+                           <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/gif"
+                              className="hidden"
+                              onChange={handleThumbnailUpload}
+                              disabled={uploading}
+                           />
+                           <div className="flex items-center gap-2 rounded-md border border-border/40 px-3 py-2 text-sm hover:bg-accent transition-colors">
+                              <Upload className="h-4 w-4" />
+                              {uploading ? "Uploading..." : "Upload Image"}
+                           </div>
+                        </label>
+                     </div>
                   </div>
                </div>
                <DialogFooter>

@@ -2,7 +2,7 @@
 
 import { signOut, useSession } from "next-auth/react";
 import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
 import {
    DropdownMenu,
    DropdownMenuContent,
@@ -29,17 +29,15 @@ export default function ResellerHeader() {
             <ResellerMobileSidebar />
          </div>
          <DropdownMenu>
-            <DropdownMenuTrigger asChild={false}>
-               <Button variant="ghost" className="flex items-center gap-2 px-2">
-                  <Avatar className="h-8 w-8">
-                     <AvatarFallback className="bg-sidebar-accent text-xs">
-                        {initials}
-                     </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden text-sm font-medium sm:inline-block">
-                     {session?.user?.name ?? "User"}
-                  </span>
-               </Button>
+            <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-accent outline-none cursor-pointer">
+               <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-sidebar-accent text-xs">
+                     {initials}
+                  </AvatarFallback>
+               </Avatar>
+               <span className="hidden text-sm font-medium sm:inline-block">
+                  {session?.user?.name ?? "User"}
+               </span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
                <DropdownMenuLabel>

@@ -156,7 +156,7 @@ export default function NewSalePage() {
             </Card>
          ) : (
             <Card className="mt-6">
-               <CardContent className="flex flex-col gap-4 pt-6">
+               <CardContent className="flex flex-col gap-4 my-1">
                   <div className="flex flex-col gap-2">
                      <Label>Product</Label>
                      <Select value={productId} onValueChange={handleProductChange}>
@@ -183,95 +183,105 @@ export default function NewSalePage() {
                   )}
 
                   <div className="flex flex-col gap-2">
-                     <Label className="text-xs text-muted-foreground">Pricing</Label>
-                     <div className="flex gap-1">
-                        {(["auto", "custom-per-unit", "flat-total"] as PricingMode[]).map((mode) => (
+                     <Label>Pricing</Label>
+                     <div className="rounded-lg border border-border/40 bg-accent/30 p-3 flex flex-col gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                            <Button
-                              key={mode}
-                              variant={pricingMode === mode ? "default" : "outline"}
+                              variant={pricingMode !== "flat-total" ? "default" : "outline"}
                               size="sm"
-                              className="flex-1 text-xs h-7"
-                              onClick={() => switchPricingMode(mode)}
+                              className="text-xs h-7"
+                              onClick={() => switchPricingMode(pricingMode === "flat-total" ? "auto" : pricingMode)}
                            >
-                              {mode === "auto" ? "Auto" : mode === "custom-per-unit" ? "Per Unit" : "Flat Total"}
+                              Per Unit
                            </Button>
-                        ))}
-                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="flex flex-col gap-2">
-                        <Label>Quantity</Label>
-                        <Input
-                           type="number"
-                           min="1"
-                           max={selected?.quantity}
-                           value={quantity}
-                           onChange={(e) => handleQuantityChange(e.target.value)}
-                           placeholder="0"
-                        />
-                     </div>
-                     {pricingMode === "flat-total" ? (
-                        <div className="flex flex-col gap-2">
-                           <Label>Total Amount</Label>
-                           <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={flatTotal}
-                              onChange={(e) => setFlatTotal(e.target.value)}
-                              placeholder="50.00"
-                              className="border-blue-500/50"
-                           />
+                           <Button
+                              variant={pricingMode === "flat-total" ? "default" : "outline"}
+                              size="sm"
+                              className="text-xs h-7"
+                              onClick={() => switchPricingMode("flat-total")}
+                           >
+                              Flat
+                           </Button>
                         </div>
-                     ) : (
-                        <div className="flex flex-col gap-2">
-                           <Label>
-                              Sell Price
-                              {selected && (
-                                 <span className="ml-1 text-xs text-muted-foreground">
-                                    per {unitLabel(selected.product.unit)}
-                                 </span>
-                              )}
-                           </Label>
-                           <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={soldPrice}
-                              onChange={(e) => {
-                                 if (pricingMode === "auto") setPricingMode("custom-per-unit");
-                                 setSoldPrice(e.target.value);
-                              }}
-                              placeholder="0.00"
-                              className={cn(pricingMode === "custom-per-unit" && "border-yellow-500/50")}
-                           />
+                        <div className="grid grid-cols-2 gap-3">
+                           <div className="flex flex-col gap-1.5">
+                              <span className="text-xs text-muted-foreground">Quantity</span>
+                              <Input
+                                 type="number"
+                                 min="1"
+                                 max={selected?.quantity}
+                                 value={quantity}
+                                 onChange={(e) => handleQuantityChange(e.target.value)}
+                                 placeholder="0"
+                              />
+                           </div>
+                           {pricingMode === "flat-total" ? (
+                              <div className="flex flex-col gap-1.5">
+                                 <span className="text-xs text-muted-foreground">Flat</span>
+                                 <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={flatTotal}
+                                    onChange={(e) => setFlatTotal(e.target.value)}
+                                    placeholder="50.00"
+                                    className="border-blue-500/50"
+                                 />
+                              </div>
+                           ) : (
+                              <div className="flex flex-col gap-1.5">
+                                 <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">Rate Price</span>
+                                    <Button
+                                       variant="ghost"
+                                       size="sm"
+                                       className={cn(
+                                          "h-4 px-1 text-[10px] rounded",
+                                          pricingMode === "auto"
+                                             ? "text-muted-foreground"
+                                             : "text-yellow-500"
+                                       )}
+                                       onClick={() => switchPricingMode(pricingMode === "auto" ? "custom-per-unit" : "auto")}
+                                    >
+                                       {pricingMode === "auto" ? "Auto" : "Custom"}
+                                    </Button>
+                                 </div>
+                                 <div className="relative">
+                                    <Input
+                                       type="number"
+                                       step="0.01"
+                                       min="0"
+                                       value={soldPrice}
+                                       onChange={(e) => {
+                                          if (pricingMode === "auto") setPricingMode("custom-per-unit");
+                                          setSoldPrice(e.target.value);
+                                       }}
+                                       placeholder="0.00"
+                                       className={cn(
+                                          "pr-16",
+                                          pricingMode === "custom-per-unit" && "border-yellow-500/50"
+                                       )}
+                                    />
+                                    {selected && (
+                                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                                          /{unitLabel(selected.product.unit)}
+                                       </span>
+                                    )}
+                                 </div>
+                              </div>
+                           )}
                         </div>
-                     )}
+                     </div>
                   </div>
 
                   {pricingMode === "flat-total" && flatTotal && quantity && (
                      <div className="rounded-md bg-blue-500/10 px-3 py-2 text-sm">
                         <div className="flex justify-between">
-                           <span className="text-blue-400">Price per {unitLabel(selected?.product.unit ?? null)}</span>
+                           <span className="text-blue-400">Rate per {unitLabel(selected?.product.unit ?? null)}</span>
                            <span className="text-blue-400 font-medium">
                               {formatPrice(parseFloat(flatTotal) / parseInt(quantity))}
                            </span>
                         </div>
-                     </div>
-                  )}
-
-                  {pricingMode === "custom-per-unit" && selected && (
-                     <div className="flex items-center justify-between rounded-md bg-yellow-500/10 px-3 py-2 text-sm">
-                        <span className="text-yellow-500">Custom per-unit price</span>
-                        <Button
-                           variant="ghost"
-                           size="sm"
-                           className="h-6 text-xs text-yellow-500 hover:text-yellow-400"
-                           onClick={() => switchPricingMode("auto")}
-                        >
-                           Reset to auto
-                        </Button>
                      </div>
                   )}
 

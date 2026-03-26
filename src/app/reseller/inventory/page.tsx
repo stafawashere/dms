@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Warehouse } from "lucide-react";
+import { Search, Warehouse, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import {
    Table,
    TableBody,
@@ -29,6 +33,7 @@ export default function ResellerInventoryPage() {
    const [inventory, setInventory] = useState<InventoryItem[]>([]);
    const [loading, setLoading] = useState(true);
    const [search, setSearch] = useState("");
+   const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set());
 
    useEffect(() => {
       let ignore = false;
@@ -43,10 +48,25 @@ export default function ResellerInventoryPage() {
    const formatPrice = (n: number) =>
       new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 
-   const filtered = inventory.filter((inv) =>
-      inv.product.name.toLowerCase().includes(search.toLowerCase()) ||
-      inv.product.category.name.toLowerCase().includes(search.toLowerCase())
+   const categories = Array.from(
+      new Map(inventory.map((inv) => [inv.product.category.name, inv.product.category.name])).values()
    );
+
+   function toggleCategoryFilter(cat: string) {
+      setCategoryFilter((prev) => {
+         const next = new Set(prev);
+         if (next.has(cat)) next.delete(cat);
+         else next.add(cat);
+         return next;
+      });
+   }
+
+   const filtered = inventory.filter((inv) => {
+      const matchesSearch = inv.product.name.toLowerCase().includes(search.toLowerCase()) ||
+         inv.product.category.name.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = categoryFilter.size === 0 || categoryFilter.has(inv.product.category.name);
+      return matchesSearch && matchesCategory;
+   });
 
    const totalStock = filtered.reduce((sum, i) => sum + i.quantity, 0);
 
@@ -78,7 +98,48 @@ export default function ResellerInventoryPage() {
                <TableHeader>
                   <TableRow>
                      <TableHead>Product</TableHead>
-                     <TableHead>Category</TableHead>
+                     <TableHead>
+                        <div className="flex items-center gap-1">
+                           Category
+                           <Popover>
+                              <PopoverTrigger
+                                 render={
+                                    <Button
+                                       variant="ghost"
+                                       size="icon"
+                                       className="h-6 w-6"
+                                    />
+                                 }
+                              >
+                                 <Filter className={cn("size-[11px]", categoryFilter.size > 0 && "text-primary")} />
+                              </PopoverTrigger>
+                              <PopoverContent align="start" className="w-48">
+                                 <div className="flex flex-col gap-2">
+                                    <p className="text-xs font-medium text-muted-foreground">Filter by category</p>
+                                    {categories.map((cat) => (
+                                       <label key={cat} className="flex items-center gap-2 cursor-pointer text-sm">
+                                          <Checkbox
+                                             checked={categoryFilter.has(cat)}
+                                             onCheckedChange={() => toggleCategoryFilter(cat)}
+                                          />
+                                          {cat}
+                                       </label>
+                                    ))}
+                                    {categoryFilter.size > 0 && (
+                                       <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="mt-1 h-7 text-xs"
+                                          onClick={() => setCategoryFilter(new Set())}
+                                       >
+                                          Clear filter
+                                       </Button>
+                                    )}
+                                 </div>
+                              </PopoverContent>
+                           </Popover>
+                        </div>
+                     </TableHead>
                      <TableHead className="text-right">Sell Price</TableHead>
                      <TableHead className="text-right">Stock</TableHead>
                      <TableHead className="text-right">Value</TableHead>

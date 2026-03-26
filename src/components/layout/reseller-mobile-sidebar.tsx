@@ -9,6 +9,7 @@ import {
    ShoppingCart,
    History,
    Warehouse,
+   Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
    { label: "Dashboard", href: "/reseller/dashboard", icon: LayoutDashboard },
+   { label: "Products", href: "/reseller/products", icon: Package },
    { label: "New Sale", href: "/reseller/sales/new", icon: ShoppingCart },
    { label: "Sales History", href: "/reseller/sales/history", icon: History },
    { label: "My Inventory", href: "/reseller/inventory", icon: Warehouse },

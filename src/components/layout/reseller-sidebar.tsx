@@ -7,12 +7,14 @@ import {
    ShoppingCart,
    History,
    Warehouse,
+   Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
 const navItems = [
    { label: "Dashboard", href: "/reseller/dashboard", icon: LayoutDashboard },
+   { label: "Products", href: "/reseller/products", icon: Package },
    { label: "New Sale", href: "/reseller/sales/new", icon: ShoppingCart },
    { label: "Sales History", href: "/reseller/sales/history", icon: History },
    { label: "My Inventory", href: "/reseller/inventory", icon: Warehouse },

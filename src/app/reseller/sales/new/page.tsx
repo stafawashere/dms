@@ -73,7 +73,8 @@ export default function NewSalePage() {
       return Number(item.product.sellPrice);
    }
 
-   function handleProductChange(id: string) {
+   function handleProductChange(id: string | null) {
+      if (!id) return;
       setProductId(id);
       const item = inventory.find((i) => i.product.id === id);
       if (item && quantity && pricingMode === "auto") {

@@ -135,7 +135,8 @@ export default function SalesPage() {
       return Number(product.sellPrice);
    }
 
-   function handleProductChange(productId: string) {
+   function handleProductChange(productId: string | null) {
+      if (!productId) return;
       const product = products.find((p) => p.id === productId);
       if (product && form.pricingMode === "auto") {
          const qty = parseInt(form.quantity) || 1;

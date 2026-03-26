@@ -1,0 +1,110 @@
+generator client {
+   provider = "prisma-client"
+   output   = "../src/generated/prisma"
+}
+
+datasource db {
+   provider = "postgresql"
+}
+
+model User {
+   id        String      @id @default(cuid())
+   email     String      @unique
+   password  String
+   name      String
+   role      Role        @default(RESELLER)
+   active    Boolean     @default(true)
+   inventory Inventory[]
+   createdAt DateTime    @default(now())
+   updatedAt DateTime    @updatedAt
+
+   sales              Sale[]
+   performedMovements StockMovement[] @relation("PerformedBy")
+   inventoryMovements StockMovement[] @relation("AffectedUser")
+}
+
+model Category {
+   id       String    @id @default(cuid())
+   name     String    @unique
+   products Product[]
+}
+
+model Product {
+   id             String          @id @default(cuid())
+   name           String          @unique
+   category       Category        @relation(fields: [categoryId], references: [id])
+   categoryId     String
+   costPrice      Decimal
+   sellPrice      Decimal
+   unit           String?
+   description    String?
+   thumbnail      String?
+   priceTiers     PriceTier[]
+   sales          Sale[]
+   inventory      Inventory[]
+   active         Boolean         @default(true)
+   createdAt      DateTime        @default(now())
+   updatedAt      DateTime        @updatedAt
+   stockMovements StockMovement[]
+}
+
+model PriceTier {
+   id        String  @id @default(cuid())
+   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+   productId String
+   minQty    Int
+   maxQty    Int?
+   costPrice Decimal
+   sellPrice Decimal
+
+   @@unique([productId, minQty])
+}
+
+model Inventory {
+   id        String   @id @default(cuid())
+   user      User     @relation(fields: [userId], references: [id])
+   userId    String
+   product   Product  @relation(fields: [productId], references: [id])
+   productId String
+   quantity  Int      @default(0)
+   updatedAt DateTime @updatedAt
+
+   @@unique([userId, productId])
+}
+
+model Sale {
+   id         String   @id @default(cuid())
+   reseller   User     @relation(fields: [resellerId], references: [id])
+   resellerId String
+   product    Product  @relation(fields: [productId], references: [id])
+   productId  String
+   quantity   Int
+   soldPrice  Decimal
+   notes      String?
+   createdAt  DateTime @default(now())
+}
+
+model StockMovement {
+   id            String       @id @default(cuid())
+   product       Product      @relation(fields: [productId], references: [id])
+   productId     String
+   quantity      Int
+   type          MovementType
+   note          String?
+   performedBy   User         @relation("PerformedBy", fields: [performedById], references: [id])
+   performedById String
+   user          User         @relation("AffectedUser", fields: [userId], references: [id])
+   userId        String
+   createdAt     DateTime     @default(now())
+}
+
+enum MovementType {
+   IN
+   OUT
+   ADJUSTMENT
+}
+
+enum Role {
+   ADMIN
+   RESELLER
+}

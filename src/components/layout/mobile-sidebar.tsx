@@ -1,0 +1,74 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Menu } from "lucide-react";
+import {
+   LayoutDashboard,
+   Package,
+   Warehouse,
+   Users,
+   ShoppingCart,
+   BarChart3,
+   FolderOpen,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+   { label: "Products", href: "/admin/products", icon: Package },
+   { label: "Categories", href: "/admin/categories", icon: FolderOpen },
+   { label: "Inventory", href: "/admin/inventory", icon: Warehouse },
+   { label: "Resellers", href: "/admin/resellers", icon: Users },
+   { label: "Sales", href: "/admin/sales", icon: ShoppingCart },
+   { label: "Reports", href: "/admin/reports", icon: BarChart3 },
+];
+
+export default function MobileSidebar() {
+   const [open, setOpen] = useState(false);
+   const pathname = usePathname();
+
+   return (
+      <>
+         <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setOpen(true)}>
+            <Menu className="h-5 w-5" />
+         </Button>
+         <Sheet open={open} onOpenChange={setOpen}>
+         <SheetContent side="left" className="w-64 p-0 bg-sidebar">
+            <div className="flex h-16 items-center px-6">
+               <span className="text-xl font-bold tracking-tight">DMS</span>
+            </div>
+            <Separator className="opacity-40" />
+            <nav className="px-3 py-4">
+               <ul className="flex flex-col gap-1">
+                  {navItems.map((item) => {
+                     const active = pathname.startsWith(item.href);
+                     return (
+                        <li key={item.href}>
+                           <Link
+                              href={item.href}
+                              onClick={() => setOpen(false)}
+                              className={cn(
+                                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                 active
+                                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                              )}
+                           >
+                              <item.icon className="h-4 w-4" />
+                              {item.label}
+                           </Link>
+                        </li>
+                     );
+                  })}
+               </ul>
+            </nav>
+         </SheetContent>
+         </Sheet>
+      </>
+   );
+}

@@ -38,6 +38,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
    const existing = await prisma.product.findUnique({ where: { id } });
    if (!existing) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
-   await prisma.product.delete({ where: { id } });
+   await prisma.$transaction(async (tx) => {
+      await tx.sale.deleteMany({ where: { productId: id } });
+      await tx.stockMovement.deleteMany({ where: { productId: id } });
+      await tx.inventory.deleteMany({ where: { productId: id } });
+      await tx.priceTier.deleteMany({ where: { productId: id } });
+      await tx.product.delete({ where: { id } });
+   });
    return NextResponse.json({ message: "Product deleted" }, { status: 200 });
 }

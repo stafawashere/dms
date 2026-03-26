@@ -174,8 +174,8 @@ export default function ProductsPage() {
       const priceTiers = form.priceTiers
          .filter((t) => t.minQty && t.costPrice && t.sellPrice)
          .map((t) => ({
-            minQty: parseInt(t.minQty),
-            maxQty: t.maxQty ? parseInt(t.maxQty) : null,
+            minQty: parseFloat(t.minQty),
+            maxQty: t.maxQty ? parseFloat(t.maxQty) : null,
             costPrice: parseFloat(t.costPrice),
             sellPrice: parseFloat(t.sellPrice),
          }));

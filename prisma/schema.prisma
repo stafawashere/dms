@@ -52,8 +52,8 @@ model PriceTier {
    id        String  @id @default(cuid())
    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
    productId String
-   minQty    Int
-   maxQty    Int?
+   minQty    Float
+   maxQty    Float?
    costPrice Decimal
    sellPrice Decimal
 

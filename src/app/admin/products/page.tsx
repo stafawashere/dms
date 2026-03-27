@@ -556,7 +556,7 @@ export default function ProductsPage() {
                                  <Badge variant="secondary">{product.category.name}</Badge>
                               </TableCell>
                               <TableCell className="text-muted-foreground">
-                                 {product.unit ?? "unit"}<span className="text-[10px] text-muted-foreground/40">(s)</span>
+                                 {product.unit ?? "unit"}
                               </TableCell>
                               <TableCell className="text-right">
                                  {formatPrice(product.costPrice)}/{product.unit ?? "unit"}
@@ -710,7 +710,12 @@ export default function ProductsPage() {
                                     />
                                  </div>
                                  <div className="flex flex-col gap-1 flex-1">
-                                    <Label className="text-xs text-muted-foreground">Cost</Label>
+                                    <div className="flex items-center justify-between">
+                                       <Label className="text-xs text-muted-foreground">Cost</Label>
+                                       {tier.qty && tier.costPrice && parseFloat(tier.qty) > 0 && (
+                                          <span className="text-[10px] text-muted-foreground/50">${(parseFloat(tier.costPrice) / parseFloat(tier.qty)).toFixed(2)}/{form.unit || "unit"}</span>
+                                       )}
+                                    </div>
                                     <Input
                                        type="number"
                                        step="0.01"
@@ -721,7 +726,12 @@ export default function ProductsPage() {
                                     />
                                  </div>
                                  <div className="flex flex-col gap-1 flex-1">
-                                    <Label className="text-xs text-muted-foreground">Sell</Label>
+                                    <div className="flex items-center justify-between">
+                                       <Label className="text-xs text-muted-foreground">Sell</Label>
+                                       {tier.qty && tier.sellPrice && parseFloat(tier.qty) > 0 && (
+                                          <span className="text-[10px] text-muted-foreground/50">${(parseFloat(tier.sellPrice) / parseFloat(tier.qty)).toFixed(2)}/{form.unit || "unit"}</span>
+                                       )}
+                                    </div>
                                     <Input
                                        type="number"
                                        step="0.01"
@@ -878,6 +888,9 @@ export default function ProductsPage() {
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                    {formatPrice(tier.costPrice)}
+                                                   <span className="ml-1 text-xs text-muted-foreground">
+                                                      ({formatPrice(Number(tier.costPrice) / tier.qty)}/{tierProduct.unit ?? "unit"})
+                                                   </span>
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                    {formatPrice(tier.sellPrice)}

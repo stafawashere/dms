@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 type PriceTier = {
    id: string;
    minQty: number;
-   maxQty: number | null;
    costPrice: number;
    sellPrice: number;
 };
@@ -208,7 +207,7 @@ function ProductCard({
                         .map((tier) => (
                            <div key={tier.id} className="flex justify-between text-[11px]">
                               <span className="text-muted-foreground">
-                                 {tier.minQty}{tier.maxQty ? `–${tier.maxQty}` : "+"}
+                                 {tier.minQty}+
                               </span>
                               <span className="font-medium">
                                  {formatPrice(Number(tier.sellPrice))}

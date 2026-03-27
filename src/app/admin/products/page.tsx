@@ -41,7 +41,6 @@ type Category = {
 type PriceTier = {
    id?: string;
    minQty: number;
-   maxQty: number | null;
    costPrice: number;
    sellPrice: number;
 };
@@ -62,7 +61,6 @@ type Product = {
 
 type TierForm = {
    minQty: string;
-   maxQty: string;
    costPrice: string;
    sellPrice: string;
 };
@@ -81,7 +79,7 @@ type ProductForm = {
 type SortKey = "name" | "costPrice" | "sellPrice" | "markup" | null;
 type SortDir = "asc" | "desc";
 
-const emptyTier: TierForm = { minQty: "", maxQty: "", costPrice: "", sellPrice: "" };
+const emptyTier: TierForm = { minQty: "", costPrice: "", sellPrice: "" };
 
 const emptyForm: ProductForm = {
    name: "",
@@ -191,7 +189,6 @@ export default function ProductsPage() {
          thumbnail: product.thumbnail ?? "",
          priceTiers: product.priceTiers.map((t) => ({
             minQty: String(t.minQty),
-            maxQty: t.maxQty != null ? String(t.maxQty) : "",
             costPrice: String(t.costPrice),
             sellPrice: String(t.sellPrice),
          })),
@@ -224,7 +221,6 @@ export default function ProductsPage() {
          .filter((t) => t.minQty && t.costPrice && t.sellPrice)
          .map((t) => ({
             minQty: parseFloat(t.minQty),
-            maxQty: t.maxQty ? parseFloat(t.maxQty) : null,
             costPrice: parseFloat(t.costPrice),
             sellPrice: parseFloat(t.sellPrice),
          }));
@@ -590,16 +586,6 @@ export default function ProductsPage() {
                                     />
                                  </div>
                                  <div className="flex flex-col gap-1 flex-1">
-                                    <Label className="text-xs text-muted-foreground">Max Qty</Label>
-                                    <Input
-                                       type="number"
-                                       min="1"
-                                       value={tier.maxQty}
-                                       onChange={(e) => updateTier(i, "maxQty", e.target.value)}
-                                       placeholder="Leave empty for unlimited"
-                                    />
-                                 </div>
-                                 <div className="flex flex-col gap-1 flex-1">
                                     <Label className="text-xs text-muted-foreground">Cost</Label>
                                     <Input
                                        type="number"
@@ -728,7 +714,7 @@ export default function ProductsPage() {
                                  return (
                                     <TableRow key={i}>
                                        <TableCell className="font-medium">
-                                          {tier.minQty}{tier.maxQty ? `–${tier.maxQty}` : "+"} {unitLabel(tierProduct.unit)}
+                                          {tier.minQty}+ {unitLabel(tierProduct.unit)}
                                        </TableCell>
                                        <TableCell className="text-right">
                                           {formatPrice(tier.costPrice)}/{unitLabel(tierProduct.unit)}

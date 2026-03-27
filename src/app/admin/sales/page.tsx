@@ -37,7 +37,7 @@ type Product = {
    sellPrice: number;
    costPrice: number;
    unit: string | null;
-   priceTiers: { minQty: number; maxQty: number | null; sellPrice: number; costPrice: number }[];
+   priceTiers: { minQty: number; sellPrice: number; costPrice: number }[];
 };
 
 type Reseller = {
@@ -128,7 +128,7 @@ export default function SalesPage() {
 
       const sorted = [...product.priceTiers].sort((a, b) => b.minQty - a.minQty);
       for (const tier of sorted) {
-         if (qty >= tier.minQty && (tier.maxQty === null || qty <= tier.maxQty)) {
+         if (qty >= tier.minQty) {
             return Number(tier.sellPrice);
          }
       }

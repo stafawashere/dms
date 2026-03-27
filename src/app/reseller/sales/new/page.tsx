@@ -23,7 +23,7 @@ type InventoryItem = {
       name: string;
       unit: string | null;
       sellPrice: number;
-      priceTiers: { minQty: number; maxQty: number | null; sellPrice: number }[];
+      priceTiers: { minQty: number; sellPrice: number }[];
    };
 };
 
@@ -66,7 +66,7 @@ export default function NewSalePage() {
       if (!tiers || tiers.length === 0) return Number(item.product.sellPrice);
       const sorted = [...tiers].sort((a, b) => b.minQty - a.minQty);
       for (const tier of sorted) {
-         if (qty >= tier.minQty && (tier.maxQty === null || qty <= tier.maxQty)) {
+         if (qty >= tier.minQty) {
             return Number(tier.sellPrice);
          }
       }

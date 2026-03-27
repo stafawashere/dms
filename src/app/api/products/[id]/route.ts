@@ -19,7 +19,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       if (priceTiers) {
          await tx.priceTier.deleteMany({ where: { productId: id } });
          if (priceTiers.length) {
-            await tx.priceTier.createMany({ data: priceTiers.map((t: { minQty: number; maxQty: number | null; costPrice: number; sellPrice: number }) => ({ ...t, productId: id })) });
+            await tx.priceTier.createMany({ data: priceTiers.map((t: { minQty: number; costPrice: number; sellPrice: number }) => ({ ...t, productId: id })) });
          }
       }
       

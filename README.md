@@ -5,10 +5,15 @@
 ## Features
 
 **Role-Based Access** — admin and reseller portals with separate dashboards, permissions, and views
+
 **Per-User Inventory** — each reseller maintains their own stock per product, managed through stock transfers
+
 **Bulk Pricing Tiers** — define cost and sell prices per quantity range with automatic tier-based pricing
+
 **Flexible Sale Pricing** — auto (tier-based), per-unit custom, or flat total pricing modes
+
 **Reseller Management** — create accounts, assign inventory, track individual performance and sales history
+
 **Reports & Analytics** — revenue charts, category breakdowns, and low stock alerts
 
 ## Tech Stack

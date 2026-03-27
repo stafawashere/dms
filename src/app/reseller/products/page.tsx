@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Package } from "lucide-react";
+import { Search, Package, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type PriceTier = {
    id: string;
-   minQty: number;
+   qty: number;
    costPrice: number;
    sellPrice: number;
 };
@@ -37,6 +38,7 @@ export default function ResellerProductsPage() {
    const [inStockIds, setInStockIds] = useState<Set<string>>(new Set());
    const [loading, setLoading] = useState(true);
    const [search, setSearch] = useState("");
+   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
    useEffect(() => {
       let ignore = false;
@@ -124,6 +126,7 @@ export default function ResellerProductsPage() {
                                  inStock={inStockIds.has(product.id)}
                                  formatPrice={formatPrice}
                                  unitLabel={unitLabel}
+                                 onClick={() => setSelectedProduct(product)}
                               />
                            ))}
                         </div>
@@ -132,6 +135,87 @@ export default function ResellerProductsPage() {
                ))}
             </div>
          )}
+
+         <Dialog open={selectedProduct !== null} onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}>
+            <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+               {selectedProduct && (
+                  <>
+                     <DialogHeader>
+                        <DialogTitle>{selectedProduct.name}</DialogTitle>
+                     </DialogHeader>
+                     <div className="flex flex-col gap-4 py-2">
+                        <div className="relative aspect-video w-full rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden">
+                           {selectedProduct.thumbnail ? (
+                              <img
+                                 src={selectedProduct.thumbnail}
+                                 alt={selectedProduct.name}
+                                 className="h-full w-full object-cover"
+                              />
+                           ) : (
+                              <Package className="h-16 w-16 text-muted-foreground/40" />
+                           )}
+                           <Badge
+                              className={`absolute top-3 right-3 ${
+                                 inStockIds.has(selectedProduct.id)
+                                    ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                                    : "bg-red-500/15 text-red-400 border-red-500/30"
+                              }`}
+                              variant="outline"
+                           >
+                              {inStockIds.has(selectedProduct.id) ? "In Stock" : "Out of Stock"}
+                           </Badge>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                           <p className="text-2xl font-bold">
+                              {formatPrice(Number(selectedProduct.sellPrice))}
+                              <span className="text-base text-muted-foreground">
+                                 /{selectedProduct.unit ?? "unit"}
+                              </span>
+                           </p>
+                           <Badge variant="secondary">{selectedProduct.category.name}</Badge>
+                        </div>
+
+                        {selectedProduct.description && (
+                           <p className="text-sm text-muted-foreground">
+                              {selectedProduct.description}
+                           </p>
+                        )}
+
+                        {selectedProduct.priceTiers.length > 0 && (
+                           <div className="rounded-lg border border-border/40 p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                 <p className="font-medium">Pricing</p>
+                                 <Badge variant="secondary" className="text-xs">
+                                    {selectedProduct.priceTiers.length} tier(s)
+                                 </Badge>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                 {selectedProduct.priceTiers
+                                    .sort((a, b) => a.qty - b.qty)
+                                    .map((tier) => (
+                                       <div key={tier.id} className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
+                                          <div className="flex items-baseline gap-2">
+                                             <span className="font-medium text-sm">
+                                                {tier.qty}{selectedProduct.unit ?? ""}
+                                             </span>
+                                             <span className="text-xs text-muted-foreground">
+                                                ({formatPrice(Number(tier.sellPrice) / tier.qty)}/{selectedProduct.unit ?? "unit"})
+                                             </span>
+                                          </div>
+                                          <span className="font-semibold text-sm">
+                                             {formatPrice(Number(tier.sellPrice))}
+                                          </span>
+                                       </div>
+                                    ))}
+                              </div>
+                           </div>
+                        )}
+                     </div>
+                  </>
+               )}
+            </DialogContent>
+         </Dialog>
       </div>
    );
 }
@@ -141,16 +225,21 @@ function ProductCard({
    inStock,
    formatPrice,
    unitLabel,
+   onClick,
 }: {
    product: Product;
    inStock: boolean;
    formatPrice: (n: number) => string;
    unitLabel: (u: string | null) => string;
+   onClick: () => void;
 }) {
    const hasTiers = product.priceTiers.length > 0;
 
    return (
-      <div className="group flex flex-col rounded-lg border border-border/40 bg-card overflow-hidden transition-colors hover:border-border/80">
+      <div
+         className="group flex flex-col rounded-lg border border-border/40 bg-card overflow-hidden transition-colors hover:border-border/80 cursor-pointer"
+         onClick={onClick}
+      >
          <div className="relative aspect-square w-full bg-muted/30 flex items-center justify-center">
             {product.thumbnail ? (
                <img
@@ -203,11 +292,14 @@ function ProductCard({
                   </div>
                   <div className="flex flex-col gap-0.5">
                      {product.priceTiers
-                        .sort((a, b) => a.minQty - b.minQty)
+                        .sort((a, b) => a.qty - b.qty)
                         .map((tier) => (
                            <div key={tier.id} className="flex justify-between text-[11px]">
                               <span className="text-muted-foreground">
-                                 {tier.minQty}+
+                                 {tier.qty}{product.unit ? product.unit : ""}
+                                 <span className="ml-1 text-muted-foreground/50">
+                                    ({formatPrice(Number(tier.sellPrice) / tier.qty)}/{product.unit ?? "unit"})
+                                 </span>
                               </span>
                               <span className="font-medium">
                                  {formatPrice(Number(tier.sellPrice))}

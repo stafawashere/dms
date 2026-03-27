@@ -37,7 +37,7 @@ type Product = {
    sellPrice: number;
    costPrice: number;
    unit: string | null;
-   priceTiers: { minQty: number; sellPrice: number; costPrice: number }[];
+   priceTiers: { qty: number; sellPrice: number; costPrice: number }[];
 };
 
 type Reseller = {
@@ -126,12 +126,9 @@ export default function SalesPage() {
    function getApplicablePrice(product: Product, qty: number): number {
       if (!product.priceTiers || product.priceTiers.length === 0) return Number(product.sellPrice);
 
-      const sorted = [...product.priceTiers].sort((a, b) => b.minQty - a.minQty);
-      for (const tier of sorted) {
-         if (qty >= tier.minQty) {
-            return Number(tier.sellPrice);
-         }
-      }
+      const match = product.priceTiers.find((t) => t.qty === qty);
+      if (match) return Number(match.sellPrice) / qty;
+
       return Number(product.sellPrice);
    }
 

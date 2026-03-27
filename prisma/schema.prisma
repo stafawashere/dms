@@ -52,11 +52,11 @@ model PriceTier {
    id        String  @id @default(cuid())
    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
    productId String
-   minQty    Float
+   qty       Float
    costPrice Decimal
    sellPrice Decimal
 
-   @@unique([productId, minQty])
+   @@unique([productId, qty])
 }
 
 model Inventory {

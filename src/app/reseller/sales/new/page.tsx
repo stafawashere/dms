@@ -23,7 +23,7 @@ type InventoryItem = {
       name: string;
       unit: string | null;
       sellPrice: number;
-      priceTiers: { minQty: number; sellPrice: number }[];
+      priceTiers: { qty: number; sellPrice: number }[];
    };
 };
 
@@ -64,12 +64,10 @@ export default function NewSalePage() {
    function getApplicablePrice(item: InventoryItem, qty: number): number {
       const tiers = item.product.priceTiers;
       if (!tiers || tiers.length === 0) return Number(item.product.sellPrice);
-      const sorted = [...tiers].sort((a, b) => b.minQty - a.minQty);
-      for (const tier of sorted) {
-         if (qty >= tier.minQty) {
-            return Number(tier.sellPrice);
-         }
-      }
+
+      const match = tiers.find((t) => t.qty === qty);
+      if (match) return Number(match.sellPrice) / qty;
+
       return Number(item.product.sellPrice);
    }
 

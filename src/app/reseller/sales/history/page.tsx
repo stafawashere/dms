@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, ShoppingCart, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -53,6 +53,14 @@ type InventoryItem = {
 type PricingMode = "auto" | "custom-per-unit" | "flat-total";
 
 export default function SalesHistoryPage() {
+   return (
+      <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>
+         <SalesHistoryContent />
+      </Suspense>
+   );
+}
+
+function SalesHistoryContent() {
    const searchParams = useSearchParams();
    const [sales, setSales] = useState<Sale[]>([]);
    const [loading, setLoading] = useState(true);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { Plus, Pencil, Trash2, Search, X, Filter, Upload, ImageIcon, ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, TableIcon, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -303,6 +303,10 @@ export default function ProductsPage() {
       new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
    const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
+   const qtyUnit = (qty: number, unit: string | null) => {
+      const u = unit ?? "unit";
+      return u.length > 2 ? `${qty} ${u}(s)` : `${qty}${u}(s)`;
+   };
 
    return (
       <div>
@@ -404,9 +408,9 @@ export default function ProductsPage() {
                                        {product.description && (
                                           <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
                                        )}
-                                       <div className="flex items-baseline justify-between gap-1">
+                                       <div className="flex items-baseline justify-between gap-1 mt-1.5">
                                           <span className="text-sm font-semibold">{formatPrice(product.sellPrice)}</span>
-                                          <span className="text-[11px] text-muted-foreground">/{unitLabel(product.unit)}</span>
+                                          <span className="text-[11px] text-muted-foreground">/{product.unit ?? "unit"}</span>
                                        </div>
                                        {hasTiers && (
                                           <div className="mt-1 border-t border-border/30 pt-1.5">
@@ -416,19 +420,19 @@ export default function ProductsPage() {
                                                    {product.priceTiers.length}
                                                 </Badge>
                                              </div>
-                                             <div className="flex flex-col gap-0.5">
+                                             <div className="grid grid-cols-[auto_auto_1fr] gap-x-2 gap-y-0.5 text-[11px]">
                                                 {product.priceTiers
                                                    .sort((a, b) => a.qty - b.qty)
                                                    .map((tier, i) => (
-                                                      <div key={i} className="flex justify-between text-[11px]">
-                                                         <span className="text-muted-foreground">
-                                                            {tier.qty}{product.unit ?? ""}
-                                                            <span className="ml-1 text-muted-foreground/50">
-                                                               ({formatPrice(tier.sellPrice / tier.qty)}/{product.unit ?? "unit"})
-                                                            </span>
+                                                      <Fragment key={i}>
+                                                         <span className="text-muted-foreground whitespace-nowrap">
+                                                            {((u: string | null) => { const unit = u ?? "unit"; return unit.length > 2 ? `${tier.qty} ${unit}` : `${tier.qty}${unit}`; })(product.unit)}{tier.qty !== 1 && <span className="text-[9px] text-muted-foreground/40">(s)</span>}
                                                          </span>
-                                                         <span className="font-medium">{formatPrice(tier.sellPrice)}</span>
-                                                      </div>
+                                                         <span className="text-muted-foreground/50 whitespace-nowrap">
+                                                            ({formatPrice(tier.sellPrice / tier.qty)}/{product.unit ?? "unit"})
+                                                         </span>
+                                                         <span className="font-medium text-right">{formatPrice(tier.sellPrice)}</span>
+                                                      </Fragment>
                                                    ))}
                                              </div>
                                           </div>
@@ -552,13 +556,13 @@ export default function ProductsPage() {
                                  <Badge variant="secondary">{product.category.name}</Badge>
                               </TableCell>
                               <TableCell className="text-muted-foreground">
-                                 {unitLabel(product.unit)}
+                                 {product.unit ?? "unit"}<span className="text-[10px] text-muted-foreground/40">(s)</span>
                               </TableCell>
                               <TableCell className="text-right">
-                                 {formatPrice(product.costPrice)}/{unitLabel(product.unit)}
+                                 {formatPrice(product.costPrice)}/{product.unit ?? "unit"}
                               </TableCell>
                               <TableCell className="text-right">
-                                 {formatPrice(product.sellPrice)}/{unitLabel(product.unit)}
+                                 {formatPrice(product.sellPrice)}/{product.unit ?? "unit"}
                               </TableCell>
                               <TableCell className="text-right text-muted-foreground">{margin}%</TableCell>
                               <TableCell className="text-center">
@@ -870,7 +874,7 @@ export default function ProductsPage() {
                                           return (
                                              <TableRow key={i}>
                                                 <TableCell className="font-medium">
-                                                   {tier.qty} {unitLabel(tierProduct.unit)}
+                                                   {((u: string | null) => { const unit = u ?? "unit"; return unit.length > 2 ? `${tier.qty} ${unit}` : `${tier.qty}${unit}`; })(tierProduct.unit)}{tier.qty !== 1 && <span className="text-[10px] text-muted-foreground/40">(s)</span>}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                    {formatPrice(tier.costPrice)}

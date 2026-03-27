@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { Search, Package, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +62,14 @@ export default function ResellerProductsPage() {
       new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 
    const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
+   const qtyUnit = (qty: number, unit: string | null) => {
+      const u = unit ?? "unit";
+      return u.length > 2 ? `${qty} ${u}(s)` : `${qty}${u}(s)`;
+   };
+   const qtyUnitShort = (qty: number, unit: string | null) => {
+      const u = unit ?? "unit";
+      return u.length > 2 ? `${qty} ${u}` : `${qty}${u}`;
+   };
 
    const filtered = products.filter((p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -126,6 +134,7 @@ export default function ResellerProductsPage() {
                                  inStock={inStockIds.has(product.id)}
                                  formatPrice={formatPrice}
                                  unitLabel={unitLabel}
+                                 qtyUnit={qtyUnit}
                                  onClick={() => setSelectedProduct(product)}
                               />
                            ))}
@@ -197,7 +206,7 @@ export default function ResellerProductsPage() {
                                        <div key={tier.id} className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
                                           <div className="flex items-baseline gap-2">
                                              <span className="font-medium text-sm">
-                                                {tier.qty}{selectedProduct.unit ?? ""}
+                                                {((u: string | null) => { const unit = u ?? "unit"; return unit.length > 2 ? `${tier.qty} ${unit}` : `${tier.qty}${unit}`; })(selectedProduct.unit)}{tier.qty !== 1 && <span className="text-[10px] text-muted-foreground/40">(s)</span>}
                                              </span>
                                              <span className="text-xs text-muted-foreground">
                                                 ({formatPrice(Number(tier.sellPrice) / tier.qty)}/{selectedProduct.unit ?? "unit"})
@@ -225,12 +234,14 @@ function ProductCard({
    inStock,
    formatPrice,
    unitLabel,
+   qtyUnit,
    onClick,
 }: {
    product: Product;
    inStock: boolean;
    formatPrice: (n: number) => string;
    unitLabel: (u: string | null) => string;
+   qtyUnit: (qty: number, unit: string | null) => string;
    onClick: () => void;
 }) {
    const hasTiers = product.priceTiers.length > 0;
@@ -273,12 +284,12 @@ function ProductCard({
                </p>
             )}
 
-            <div className="flex items-baseline justify-between gap-1">
+            <div className="flex items-baseline justify-between gap-1 mt-1.5">
                <span className="text-sm font-semibold">
                   {formatPrice(Number(product.sellPrice))}
                </span>
                <span className="text-[11px] text-muted-foreground">
-                  /{unitLabel(product.unit)}
+                  /{product.unit ?? "unit"}
                </span>
             </div>
 
@@ -290,21 +301,21 @@ function ProductCard({
                         {product.priceTiers.length}
                      </Badge>
                   </div>
-                  <div className="flex flex-col gap-0.5">
+                  <div className="grid grid-cols-[auto_auto_1fr] gap-x-2 gap-y-0.5 text-[11px]">
                      {product.priceTiers
                         .sort((a, b) => a.qty - b.qty)
                         .map((tier) => (
-                           <div key={tier.id} className="flex justify-between text-[11px]">
-                              <span className="text-muted-foreground">
-                                 {tier.qty}{product.unit ? product.unit : ""}
-                                 <span className="ml-1 text-muted-foreground/50">
-                                    ({formatPrice(Number(tier.sellPrice) / tier.qty)}/{product.unit ?? "unit"})
-                                 </span>
+                           <Fragment key={tier.id}>
+                              <span className="text-muted-foreground whitespace-nowrap">
+                                 {((u: string | null) => { const unit = u ?? "unit"; return unit.length > 2 ? `${tier.qty} ${unit}` : `${tier.qty}${unit}`; })(product.unit)}{tier.qty !== 1 && <span className="text-[9px] text-muted-foreground/40">(s)</span>}
                               </span>
-                              <span className="font-medium">
+                              <span className="text-muted-foreground/50 whitespace-nowrap">
+                                 ({formatPrice(Number(tier.sellPrice) / tier.qty)}/{product.unit ?? "unit"})
+                              </span>
+                              <span className="font-medium text-right">
                                  {formatPrice(Number(tier.sellPrice))}
                               </span>
-                           </div>
+                           </Fragment>
                         ))}
                   </div>
                </div>

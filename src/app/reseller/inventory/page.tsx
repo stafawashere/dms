@@ -76,24 +76,24 @@ export default function ResellerInventoryPage() {
       <div>
          <div className="flex items-center justify-between">
             <div>
-               <h1 className="text-2xl font-bold tracking-tight">My Inventory</h1>
+               <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
                <p className="mt-1 text-muted-foreground">
                   {inventory.length} product(s) — {totalStock} total unit(s)
                </p>
             </div>
          </div>
 
-         <div className="mt-4 flex items-center gap-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
+         <div className="mt-4 relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
                placeholder="Search by product or category..."
                value={search}
                onChange={(e) => setSearch(e.target.value)}
-               className="max-w-sm"
+               className="pl-9"
             />
          </div>
 
-         <div className="mt-4 rounded-md border border-border/40">
+         <div className="mt-4 rounded-md border border-border/70">
             <Table>
                <TableHeader>
                   <TableRow>

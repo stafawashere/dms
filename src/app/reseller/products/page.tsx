@@ -95,7 +95,7 @@ export default function ResellerProductsPage() {
          <div>
             <h1 className="text-2xl font-bold tracking-tight">Products</h1>
             <p className="mt-1 text-muted-foreground">
-               {products.length} product(s) across {grouped.length} categor{grouped.length === 1 ? "y" : "ies"}
+               Browse the catalog
             </p>
          </div>
 
@@ -116,7 +116,7 @@ export default function ResellerProductsPage() {
          ) : (
             <div className="mt-6 flex flex-col gap-6">
                {grouped.map((group) => (
-                  <Card key={group.name} className="border-border/40">
+                  <Card key={group.name} className="border-border/70">
                      <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2 text-lg">
                            {group.name}
@@ -192,7 +192,7 @@ export default function ResellerProductsPage() {
                         )}
 
                         {selectedProduct.priceTiers.length > 0 && (
-                           <div className="rounded-lg border border-border/40 p-4">
+                           <div className="rounded-lg border border-border/70 p-4">
                               <div className="flex items-center justify-between mb-3">
                                  <p className="font-medium">Pricing</p>
                                  <Badge variant="secondary" className="text-xs">
@@ -200,23 +200,30 @@ export default function ResellerProductsPage() {
                                  </Badge>
                               </div>
                               <div className="flex flex-col gap-2">
-                                 {selectedProduct.priceTiers
-                                    .sort((a, b) => a.qty - b.qty)
-                                    .map((tier) => (
-                                       <div key={tier.id} className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
-                                          <div className="flex items-baseline gap-2">
-                                             <span className="font-medium text-sm">
-                                                {((u: string | null) => { const unit = u ?? "unit"; return unit.length > 2 ? `${tier.qty} ${unit}` : `${tier.qty}${unit}`; })(selectedProduct.unit)}{tier.qty !== 1 && <span className="text-[10px] text-muted-foreground/40">(s)</span>}
-                                             </span>
-                                             <span className="text-xs text-muted-foreground">
-                                                ({formatPrice(Number(tier.sellPrice) / tier.qty)}/{selectedProduct.unit ?? "unit"})
-                                             </span>
-                                          </div>
-                                          <span className="font-semibold text-sm">
+                                 {(() => {
+                                    const sorted = [...selectedProduct.priceTiers].sort((a, b) => a.qty - b.qty);
+                                    const unit = selectedProduct.unit ?? "unit";
+                                    const maxQtyLen = Math.max(...sorted.map(t => {
+                                       const label = unit.length > 2 ? `${t.qty} ${unit}` : `${t.qty}${unit}`;
+                                       return label.length + (t.qty !== 1 ? 3 : 0);
+                                    }));
+                                    const qtyWidth = Math.max(maxQtyLen * 7, 40);
+                                    const maxRateLen = Math.max(...sorted.map(t => `(${formatPrice(Number(t.sellPrice) / t.qty)}/${unit})`.length));
+                                    const rateWidth = Math.max(maxRateLen * 6.5, 60);
+                                    return sorted.map((tier) => (
+                                       <div key={tier.id} className="flex items-center bg-muted/30 rounded-md px-3 py-2">
+                                          <span className="font-medium text-sm whitespace-nowrap" style={{ width: qtyWidth }}>
+                                             {unit.length > 2 ? `${tier.qty} ${unit}` : `${tier.qty}${unit}`}{tier.qty !== 1 && <span className="text-[10px] text-muted-foreground/40">(s)</span>}
+                                          </span>
+                                          <span className="text-xs text-muted-foreground/50 whitespace-nowrap" style={{ width: rateWidth }}>
+                                             ({formatPrice(Number(tier.sellPrice) / tier.qty)}/{unit})
+                                          </span>
+                                          <span className="font-semibold text-sm text-right flex-1">
                                              {formatPrice(Number(tier.sellPrice))}
                                           </span>
                                        </div>
-                                    ))}
+                                    ));
+                                 })()}
                               </div>
                            </div>
                         )}
@@ -248,7 +255,7 @@ function ProductCard({
 
    return (
       <div
-         className="group flex flex-col rounded-lg border border-border/40 bg-card overflow-hidden transition-colors hover:border-border/80 cursor-pointer"
+         className="group flex flex-col rounded-lg border border-border/70 bg-card overflow-hidden transition-colors hover:border-border/80 cursor-pointer"
          onClick={onClick}
       >
          <div className="relative aspect-square w-full bg-muted/30 flex items-center justify-center">

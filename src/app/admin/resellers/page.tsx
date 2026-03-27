@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, Pencil, UserX, UserCheck, Eye } from "lucide-react";
+import { Plus, Search, Pencil, UserX, UserCheck, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +60,7 @@ export default function ResellersPage() {
    const [submitting, setSubmitting] = useState(false);
    const [error, setError] = useState("");
    const [confirmToggle, setConfirmToggle] = useState<Reseller | null>(null);
+   const [confirmDelete, setConfirmDelete] = useState<Reseller | null>(null);
 
    useEffect(() => {
       let ignore = false;
@@ -136,6 +137,12 @@ export default function ResellersPage() {
       fetchResellers();
    }
 
+   async function handlePermanentDelete(reseller: Reseller) {
+      await fetch(`/api/resellers/${reseller.id}?permanent=true`, { method: "DELETE" });
+      setConfirmDelete(null);
+      fetchResellers();
+   }
+
    async function openDetail(id: string) {
       const data = await fetch(`/api/resellers/${id}`).then((r) => r.json());
       setDetail(data);
@@ -170,7 +177,7 @@ export default function ResellersPage() {
          <div className="flex items-center justify-between">
             <div>
                <h1 className="text-2xl font-bold tracking-tight">Resellers</h1>
-               <p className="mt-1 text-muted-foreground">{resellers.length} reseller(s)</p>
+               <p className="mt-1 text-muted-foreground">Manage your reseller accounts</p>
             </div>
             <Button onClick={() => { setForm(emptyForm); setError(""); setDialogOpen(true); }}>
                <Plus className="mr-2 h-4 w-4" />
@@ -178,17 +185,19 @@ export default function ResellersPage() {
             </Button>
          </div>
 
-         <div className="mt-4 flex items-center gap-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-               placeholder="Search by name or email..."
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-               className="max-w-sm"
-            />
+         <div className="mt-6 flex items-center gap-3">
+            <div className="relative flex-1 max-w-sm">
+               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+               <Input
+                  placeholder="Search by name or email..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+               />
+            </div>
          </div>
 
-         <div className="mt-4 rounded-md border border-border/40">
+         <div className="mt-4 rounded-md border border-border/70">
             <Table>
                <TableHeader>
                   <TableRow>
@@ -232,6 +241,11 @@ export default function ResellersPage() {
                                  <Button variant="ghost" size="icon" onClick={() => setConfirmToggle(reseller)}>
                                     {reseller.active ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                                  </Button>
+                                 {!reseller.active && (
+                                    <Button variant="ghost" size="icon" onClick={() => setConfirmDelete(reseller)}>
+                                       <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                 )}
                               </div>
                            </TableCell>
                         </TableRow>
@@ -322,7 +336,7 @@ export default function ResellersPage() {
                         {detail.inventory.length === 0 ? (
                            <p className="text-sm text-muted-foreground">No inventory assigned</p>
                         ) : (
-                           <div className="rounded-md border border-border/40">
+                           <div className="rounded-md border border-border/70">
                               <Table>
                                  <TableHeader>
                                     <TableRow>
@@ -350,7 +364,7 @@ export default function ResellersPage() {
                         {detail.sales.length === 0 ? (
                            <p className="text-sm text-muted-foreground">No sales recorded</p>
                         ) : (
-                           <div className="rounded-md border border-border/40">
+                           <div className="rounded-md border border-border/70">
                               <Table>
                                  <TableHeader>
                                     <TableRow>
@@ -376,6 +390,28 @@ export default function ResellersPage() {
                      </div>
                   </div>
                )}
+            </DialogContent>
+         </Dialog>
+
+         <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
+            <DialogContent className="sm:max-w-sm">
+               <DialogHeader>
+                  <DialogTitle>Permanently Delete Reseller</DialogTitle>
+               </DialogHeader>
+               <p className="text-sm text-muted-foreground">
+                  This will permanently delete <span className="font-medium text-foreground">{confirmDelete?.name}</span> and all their sales, inventory, and stock movements. This cannot be undone.
+               </p>
+               <DialogFooter>
+                  <DialogClose render={<Button variant="outline" />}>
+                     Cancel
+                  </DialogClose>
+                  <Button
+                     variant="destructive"
+                     onClick={() => confirmDelete && handlePermanentDelete(confirmDelete)}
+                  >
+                     Delete Permanently
+                  </Button>
+               </DialogFooter>
             </DialogContent>
          </Dialog>
 

@@ -132,7 +132,7 @@ export default function CategoriesPage() {
             </Dialog>
          </div>
 
-         <div className="mt-6 rounded-lg border border-border/40">
+         <div className="mt-6 rounded-lg border border-border/70">
             <Table>
                <TableHeader>
                   <TableRow>

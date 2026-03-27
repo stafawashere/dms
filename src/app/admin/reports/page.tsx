@@ -194,12 +194,9 @@ export default function ReportsPage() {
             )}
          </div>
 
-         <Card className="mt-6">
-            <CardHeader>
-               <CardTitle>Product Profitability</CardTitle>
-            </CardHeader>
-            <CardContent>
-               <div className="rounded-md border border-border/40">
+         <div className="mt-6">
+            <h2 className="text-lg font-semibold mb-3">Product Profitability</h2>
+               <div className="rounded-md border border-border/70">
                   <Table>
                      <TableHeader>
                         <TableRow>
@@ -239,15 +236,11 @@ export default function ReportsPage() {
                      </TableBody>
                   </Table>
                </div>
-            </CardContent>
-         </Card>
+         </div>
 
-         <Card className="mt-6">
-            <CardHeader>
-               <CardTitle>Reseller Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-               <div className="rounded-md border border-border/40">
+         <div className="mt-6">
+            <h2 className="text-lg font-semibold mb-3">Reseller Breakdown</h2>
+               <div className="rounded-md border border-border/70">
                   <Table>
                      <TableHeader>
                         <TableRow>
@@ -279,8 +272,7 @@ export default function ReportsPage() {
                      </TableBody>
                   </Table>
                </div>
-            </CardContent>
-         </Card>
+         </div>
       </div>
    );
 }

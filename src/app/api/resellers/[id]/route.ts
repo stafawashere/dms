@@ -51,9 +51,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
    const { id } = await params;
+   const { searchParams } = new URL(req.url);
+   const permanent = searchParams.get("permanent") === "true";
 
    const existing = await prisma.user.findUnique({ where: { id, role: "RESELLER" } });
    if (!existing) return NextResponse.json({ error: "Reseller not found" }, { status: 404 });
+
+   if (permanent) {
+      if (existing.active) {
+         return NextResponse.json({ error: "Deactivate reseller before permanently deleting" }, { status: 400 });
+      }
+
+      await prisma.$transaction(async (tx) => {
+         await tx.sale.deleteMany({ where: { resellerId: id } });
+         await tx.inventory.deleteMany({ where: { userId: id } });
+         await tx.stockMovement.deleteMany({ where: { OR: [{ performedById: id }, { userId: id }] } });
+         await tx.user.delete({ where: { id } });
+      });
+
+      return NextResponse.json({ deleted: true }, { status: 200 });
+   }
 
    const reseller = await prisma.user.update({
       where: { id },

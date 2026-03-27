@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { LogOut, User, ArrowLeftRight } from "lucide-react";
+import { LogOut, ArrowLeftRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -103,11 +103,6 @@ export default function Header() {
                      <DropdownMenuSeparator />
                   </>
                )}
-               <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-               </DropdownMenuItem>
-               <DropdownMenuSeparator />
                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out

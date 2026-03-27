@@ -279,7 +279,7 @@ export default function SalesPage() {
                      <div
                         key={reseller.id}
                         className={cn(
-                           "rounded-lg border border-border/40 p-4 cursor-pointer transition-colors",
+                           "rounded-lg border border-border/70 p-4 cursor-pointer transition-colors",
                            resellerFilter === reseller.id
                               ? "bg-accent border-primary/30"
                               : "hover:bg-accent/50"
@@ -329,7 +329,7 @@ export default function SalesPage() {
             )}
          </div>
 
-         <div className="mt-4 rounded-lg border border-border/40">
+         <div className="mt-4 rounded-lg border border-border/70">
             <Table>
                <TableHeader>
                   <TableRow>
@@ -423,7 +423,7 @@ export default function SalesPage() {
                   </div>
                   <div className="flex flex-col gap-2">
                      <Label>Pricing</Label>
-                     <div className="rounded-lg border border-border/40 bg-accent/30 p-3 flex flex-col gap-3">
+                     <div className="rounded-lg border border-border/70 bg-accent/30 p-3 flex flex-col gap-3">
                         <div className="grid grid-cols-2 gap-3">
                            <Button
                               variant={form.pricingMode !== "flat-total" ? "default" : "outline"}

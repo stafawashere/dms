@@ -362,7 +362,7 @@ export default function ProductsPage() {
                   }
                   const groups = Array.from(catMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
                   return groups.map(([catName, prods]) => (
-                     <div key={catName} className="rounded-lg border border-border/40 p-4">
+                     <div key={catName} className="rounded-lg border border-border/70 p-4">
                         <div className="flex items-center gap-2 mb-4">
                            <h3 className="text-lg font-semibold">{catName}</h3>
                            <Badge variant="outline" className="text-xs font-normal">{prods.length}</Badge>
@@ -373,7 +373,7 @@ export default function ProductsPage() {
                               return (
                                  <div
                                     key={product.id}
-                                    className="group flex flex-col rounded-lg border border-border/40 bg-card overflow-hidden transition-colors hover:border-border/80 cursor-pointer"
+                                    className="group flex flex-col rounded-lg border border-border/70 bg-card overflow-hidden transition-colors hover:border-border/80 cursor-pointer"
                                     onClick={() => setTierProduct(product)}
                                  >
                                     <div className="relative aspect-square w-full bg-muted/30 flex items-center justify-center">
@@ -447,7 +447,7 @@ export default function ProductsPage() {
                })()}
             </div>
          ) : (
-         <div className="mt-4 rounded-lg border border-border/40">
+         <div className="mt-4 rounded-lg border border-border/70">
             <Table>
                <TableHeader>
                   <TableRow>
@@ -682,7 +682,7 @@ export default function ProductsPage() {
                      </div>
                   </div>
 
-                  <div className="rounded-lg border border-border/40 p-4">
+                  <div className="rounded-lg border border-border/70 p-4">
                      <div className="flex items-center justify-between mb-3">
                         <Label className="text-base font-medium">Price Tiers</Label>
                         <Button type="button" variant="outline" size="sm" onClick={addTier}>
@@ -697,7 +697,7 @@ export default function ProductsPage() {
                      ) : (
                         <div className="flex flex-col gap-3">
                            {form.priceTiers.map((tier, i) => (
-                              <div key={i} className="flex items-end gap-2 rounded-md border border-border/40 p-3">
+                              <div key={i} className="flex items-end gap-2 rounded-md border border-border/70 p-3">
                                  <div className="flex flex-col gap-1 flex-1">
                                     <Label className="text-xs text-muted-foreground">Qty</Label>
                                     <Input
@@ -756,11 +756,11 @@ export default function ProductsPage() {
                      )}
                   </div>
 
-                  <div className="rounded-lg border border-border/40 p-4">
+                  <div className="rounded-lg border border-border/70 p-4">
                      <Label className="text-base font-medium mb-3 block">Thumbnail</Label>
                      <div className="flex items-center gap-3">
                         {form.thumbnail ? (
-                           <div className="relative h-20 w-20 rounded-md border border-border/40 overflow-hidden">
+                           <div className="relative h-20 w-20 rounded-md border border-border/70 overflow-hidden">
                               <img
                                  src={form.thumbnail}
                                  alt="Thumbnail"
@@ -787,7 +787,7 @@ export default function ProductsPage() {
                               onChange={handleThumbnailUpload}
                               disabled={uploading}
                            />
-                           <div className="flex items-center gap-2 rounded-md border border-border/40 px-3 py-2 text-sm hover:bg-accent transition-colors">
+                           <div className="flex items-center gap-2 rounded-md border border-border/70 px-3 py-2 text-sm hover:bg-accent transition-colors">
                               <Upload className="h-4 w-4" />
                               {uploading ? "Uploading..." : "Upload Image"}
                            </div>
@@ -834,7 +834,7 @@ export default function ProductsPage() {
                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{tierProduct.description}</p>
                         )}
 
-                        <div className="rounded-lg border border-border/40 p-4">
+                        <div className="rounded-lg border border-border/70 p-4">
                            <p className="font-medium mb-3">Base Pricing</p>
                            <div className="grid grid-cols-3 gap-3">
                               <div className="rounded-md bg-muted/30 px-3 py-2 text-center">
@@ -857,7 +857,7 @@ export default function ProductsPage() {
                         </div>
 
                         {tierProduct.priceTiers.length > 0 && (
-                           <div className="rounded-lg border border-border/40 p-4">
+                           <div className="rounded-lg border border-border/70 p-4">
                               <div className="flex items-center justify-between mb-3">
                                  <p className="font-medium">Price Tiers</p>
                                  <Badge variant="secondary" className="text-xs">

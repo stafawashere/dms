@@ -10,6 +10,7 @@ import {
    History,
    Warehouse,
    Package,
+   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -19,9 +20,8 @@ import { cn } from "@/lib/utils";
 const navItems = [
    { label: "Dashboard", href: "/reseller/dashboard", icon: LayoutDashboard },
    { label: "Products", href: "/reseller/products", icon: Package },
-   { label: "New Sale", href: "/reseller/sales/new", icon: ShoppingCart },
-   { label: "Sales History", href: "/reseller/sales/history", icon: History },
-   { label: "My Inventory", href: "/reseller/inventory", icon: Warehouse },
+   { label: "Sales", href: "/reseller/sales/history", icon: History },
+   { label: "Inventory", href: "/reseller/inventory", icon: Warehouse },
 ];
 
 export default function ResellerMobileSidebar() {
@@ -42,6 +42,16 @@ export default function ResellerMobileSidebar() {
                <Separator className="opacity-40" />
                <nav className="px-3 py-4">
                   <ul className="flex flex-col gap-1">
+                     <li>
+                        <Link
+                           href="/reseller/sales/history?new=true"
+                           onClick={() => setOpen(false)}
+                           className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors bg-primary/10 text-primary hover:bg-primary/20"
+                        >
+                           <Plus className="h-4 w-4" />
+                           New Sale
+                        </Link>
+                     </li>
                      {navItems.map((item) => {
                         const active = pathname === item.href || (item.href !== "/reseller/dashboard" && pathname.startsWith(item.href));
                         return (

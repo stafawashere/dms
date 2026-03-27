@@ -183,7 +183,7 @@ export default function NewSalePage() {
 
                   <div className="flex flex-col gap-2">
                      <Label>Pricing</Label>
-                     <div className="rounded-lg border border-border/40 bg-accent/30 p-3 flex flex-col gap-3">
+                     <div className="rounded-lg border border-border/70 bg-accent/30 p-3 flex flex-col gap-3">
                         <div className="grid grid-cols-2 gap-3">
                            <Button
                               variant={pricingMode !== "flat-total" ? "default" : "outline"}

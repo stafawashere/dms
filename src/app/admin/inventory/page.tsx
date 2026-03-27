@@ -161,9 +161,7 @@ export default function InventoryPage() {
          <div className="flex items-center justify-between">
             <div>
                <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
-               <p className="mt-1 text-muted-foreground">
-                  Manage stock across all users — {totalStock} total unit(s) tracked
-               </p>
+               <p className="mt-1 text-muted-foreground">Manage stock across all users</p>
             </div>
             <Button onClick={openTransfer}>
                <Plus className="mr-2 h-4 w-4" />
@@ -171,12 +169,13 @@ export default function InventoryPage() {
             </Button>
          </div>
 
-         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+         {Object.keys(stockByUser).length > 0 && (
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {Object.values(stockByUser).map((entry) => (
                <div
                   key={entry.user.id}
                   className={cn(
-                     "rounded-lg border border-border/40 p-4 cursor-pointer transition-colors",
+                     "rounded-lg border border-border/70 p-4 cursor-pointer transition-colors",
                      userFilter === entry.user.id
                         ? "bg-accent border-primary/30"
                         : "hover:bg-accent/50"
@@ -200,7 +199,8 @@ export default function InventoryPage() {
                   </div>
                </div>
             ))}
-         </div>
+            </div>
+         )}
 
          <div className="mt-6 flex items-center gap-3">
             <div className="relative flex-1 max-w-sm">
@@ -224,7 +224,7 @@ export default function InventoryPage() {
             )}
          </div>
 
-         <div className="mt-4 rounded-lg border border-border/40">
+         <div className="mt-4 rounded-lg border border-border/70">
             <Table>
                <TableHeader>
                   <TableRow>
@@ -345,11 +345,13 @@ export default function InventoryPage() {
                            onValueChange={(val) => updateForm("type", val ?? "IN")}
                         >
                            <SelectTrigger className="w-full">
-                              <SelectValue />
+                              <SelectValue>
+                                 {form.type === "IN" ? "Add Stock" : form.type === "OUT" ? "Remove Stock" : "Adjustment"}
+                              </SelectValue>
                            </SelectTrigger>
                            <SelectContent>
-                              <SelectItem value="IN">Stock In</SelectItem>
-                              <SelectItem value="OUT">Stock Out</SelectItem>
+                              <SelectItem value="IN">Add Stock</SelectItem>
+                              <SelectItem value="OUT">Remove Stock</SelectItem>
                               <SelectItem value="ADJUSTMENT">Adjustment</SelectItem>
                            </SelectContent>
                         </Select>

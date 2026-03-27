@@ -103,7 +103,7 @@ export default function ResellerDashboard() {
          <div className="mt-8 grid gap-6 lg:grid-cols-2">
             <div>
                <h2 className="text-lg font-semibold mb-3">Recent Sales</h2>
-               <div className="rounded-md border border-border/40">
+               <div className="rounded-md border border-border/70">
                   <Table>
                      <TableHeader>
                         <TableRow>
@@ -137,7 +137,7 @@ export default function ResellerDashboard() {
 
             <div>
                <h2 className="text-lg font-semibold mb-3">My Inventory</h2>
-               <div className="rounded-md border border-border/40">
+               <div className="rounded-md border border-border/70">
                   <Table>
                      <TableHeader>
                         <TableRow>

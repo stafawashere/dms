@@ -10,6 +10,7 @@ import {
    Warehouse,
    ArrowUpDown,
    AlertTriangle,
+   X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,14 +50,21 @@ type DashboardData = {
       user: { name: string };
       performedBy: { name: string };
    }[];
-   lowStock: { product: string; user: string; quantity: number }[];
+   lowStock: { product: string; user: string; quantity: number; unit: string | null }[];
    topProducts: { name: string; revenue: number; units: number }[];
    topResellers: { name: string; revenue: number; sales: number }[];
 };
 
+const ALERT_DISMISS_DURATION = 1;
+
 export default function AdminDashboard() {
    const [data, setData] = useState<DashboardData | null>(null);
    const [loading, setLoading] = useState(true);
+   const [alertsDismissed, setAlertsDismissed] = useState(() => {
+      if (typeof window === "undefined") return false;
+      const dismissed = localStorage.getItem("lowStockDismissed");
+      return !!dismissed && Date.now() - parseInt(dismissed) < ALERT_DISMISS_DURATION;
+   });
 
    useEffect(() => {
       let ignore = false;
@@ -65,6 +73,11 @@ export default function AdminDashboard() {
          .then((d) => { if (!ignore) { setData(d); setLoading(false); } });
       return () => { ignore = true; };
    }, []);
+
+   function dismissAlerts() {
+      localStorage.setItem("lowStockDismissed", String(Date.now()));
+      setAlertsDismissed(true);
+   }
 
    const formatPrice = (n: number) =>
       new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
@@ -135,16 +148,22 @@ export default function AdminDashboard() {
             </Card>
          </div>
 
-         {data.lowStock.length > 0 && (
+         {data.lowStock.length > 0 && !alertsDismissed && (
             <div className="mt-6 rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-4">
                <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="h-4 w-4 text-yellow-500" />
                   <span className="text-sm font-medium text-yellow-500">Low Stock Alerts</span>
+                  <button
+                     onClick={dismissAlerts}
+                     className="ml-auto text-yellow-500/60 hover:text-yellow-500 transition-colors"
+                  >
+                     <X className="h-4 w-4" />
+                  </button>
                </div>
                <div className="flex flex-wrap gap-2">
                   {data.lowStock.map((item, i) => (
                      <Badge key={i} variant="outline" className="border-yellow-500/30 text-yellow-500">
-                        {item.product} — {item.user} ({item.quantity} left)
+                        {item.product} — {item.user} ({item.quantity}{item.unit ? (item.unit.length > 2 ? ` ${item.unit}` : item.unit) : " unit"}{item.quantity !== 1 ? "s" : ""} left)
                      </Badge>
                   ))}
                </div>
@@ -154,7 +173,7 @@ export default function AdminDashboard() {
          <div className="mt-8 grid gap-6 lg:grid-cols-2">
             <div>
                <h2 className="text-lg font-semibold mb-3">Top Products</h2>
-               <div className="rounded-md border border-border/40">
+               <div className="rounded-md border border-border/70">
                   <Table>
                      <TableHeader>
                         <TableRow>
@@ -184,7 +203,7 @@ export default function AdminDashboard() {
 
             <div>
                <h2 className="text-lg font-semibold mb-3">Top Resellers</h2>
-               <div className="rounded-md border border-border/40">
+               <div className="rounded-md border border-border/70">
                   <Table>
                      <TableHeader>
                         <TableRow>
@@ -216,7 +235,7 @@ export default function AdminDashboard() {
          <div className="mt-8 grid gap-6 lg:grid-cols-2">
             <div>
                <h2 className="text-lg font-semibold mb-3">Recent Sales</h2>
-               <div className="rounded-md border border-border/40">
+               <div className="rounded-md border border-border/70">
                   <Table>
                      <TableHeader>
                         <TableRow>
@@ -253,7 +272,7 @@ export default function AdminDashboard() {
 
             <div>
                <h2 className="text-lg font-semibold mb-3">Recent Stock Movements</h2>
-               <div className="rounded-md border border-border/40">
+               <div className="rounded-md border border-border/70">
                   <Table>
                      <TableHeader>
                         <TableRow>

@@ -46,7 +46,7 @@ export async function GET() {
 
    const lowStock = inventory
       .filter((i) => i.quantity > 0 && i.quantity <= 10)
-      .map((i) => ({ product: i.product.name, user: i.user.name, quantity: i.quantity }));
+      .map((i) => ({ product: i.product.name, user: i.user.name, quantity: i.quantity, unit: i.product.unit }));
 
    const topProducts = Object.values(
       allSales.reduce((acc, sale) => {

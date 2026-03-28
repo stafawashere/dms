@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 export async function GET() {
    const [sales, products, inventory] = await Promise.all([
       prisma.sale.findMany({
+         where: { status: "APPROVED" },
          include: {
             product: { select: { name: true, costPrice: true, unit: true, category: { select: { name: true } } } },
             reseller: { select: { id: true, name: true } },

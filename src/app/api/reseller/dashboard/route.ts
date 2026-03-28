@@ -19,13 +19,17 @@ export async function GET() {
       }),
    ]);
 
-   const totalSales = sales.length;
-   const totalRevenue = sales.reduce((sum, s) => sum + Number(s.soldPrice) * s.quantity, 0);
+   const approvedSales = sales.filter((s) => s.status === "APPROVED");
+   const pendingSales = sales.filter((s) => s.status === "PENDING");
+   const totalSales = approvedSales.length;
+   const totalRevenue = approvedSales.reduce((sum, s) => sum + Number(s.soldPrice) * s.quantity, 0);
+   const pendingCount = pendingSales.length;
+   const pendingRevenue = pendingSales.reduce((sum, s) => sum + Number(s.soldPrice) * s.quantity, 0);
    const totalStock = inventory.reduce((sum, i) => sum + i.quantity, 0);
    const productCount = inventory.filter((i) => i.quantity > 0).length;
 
    return NextResponse.json({
-      stats: { totalSales, totalRevenue, totalStock, productCount },
+      stats: { totalSales, totalRevenue, pendingCount, pendingRevenue, totalStock, productCount },
       recentSales: sales,
       inventory,
    }, { status: 200 });

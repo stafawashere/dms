@@ -16,7 +16,7 @@ export async function GET() {
    ] = await Promise.all([
       prisma.product.count({ where: { active: true } }),
       prisma.user.count({ where: { role: "RESELLER", active: true } }),
-      prisma.sale.findMany({ include: { product: true, reseller: { select: { name: true } } } }),
+      prisma.sale.findMany({ where: { status: "APPROVED" }, include: { product: true, reseller: { select: { name: true } } } }),
       prisma.sale.findMany({
          where: { createdAt: { gte: sevenDaysAgo } },
          include: { product: true, reseller: { select: { name: true } } },
@@ -34,6 +34,8 @@ export async function GET() {
          },
       }),
    ]);
+
+   const pendingSalesCount = await prisma.sale.count({ where: { status: "PENDING" } });
 
    const totalRevenue = allSales.reduce((s, sale) => s + Number(sale.soldPrice) * sale.quantity, 0);
    const totalCost = allSales.reduce((s, sale) => s + Number(sale.product.costPrice) * sale.quantity, 0);
@@ -69,7 +71,7 @@ export async function GET() {
    ).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
 
    return NextResponse.json({
-      stats: { products, resellers, totalRevenue, totalProfit, totalUnits, totalStock, monthlyRevenue },
+      stats: { products, resellers, totalRevenue, totalProfit, totalUnits, totalStock, monthlyRevenue, pendingSalesCount },
       recentSales,
       recentMovements,
       lowStock,

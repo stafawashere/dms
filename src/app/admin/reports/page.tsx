@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { formatPrice } from "@/lib/formatters";
 import {
    BarChart,
    Bar,
@@ -16,6 +17,7 @@ import {
    ResponsiveContainer,
    Legend,
 } from "recharts";
+import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -58,9 +60,6 @@ export default function ReportsPage() {
       return () => { ignore = true; };
    }, []);
 
-   const formatPrice = (n: number) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-
    const formatShortDate = (d: string) => {
       const date = new Date(d);
       return `${date.getMonth() + 1}/${date.getDate()}`;
@@ -75,8 +74,7 @@ export default function ReportsPage() {
 
    return (
       <div>
-         <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
-         <p className="mt-1 text-muted-foreground">Analytics and performance data</p>
+         <PageHeader title="Reports" description="Analytics and performance data" />
 
          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>

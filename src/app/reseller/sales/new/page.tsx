@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { formatPrice, unitLabel } from "@/lib/formatters";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
    Select,
@@ -13,6 +15,7 @@ import {
    SelectTrigger,
    SelectValue,
 } from "@/components/ui/select";
+import { ExpandingTextarea } from "@/components/expanding-textarea";
 import { cn } from "@/lib/utils";
 
 type InventoryItem = {
@@ -57,9 +60,6 @@ export default function NewSalePage() {
    }, []);
 
    const selected = inventory.find((i) => i.product.id === productId);
-   const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
-   const formatPrice = (n: number) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 
    function getApplicablePrice(item: InventoryItem, qty: number): number {
       const tiers = item.product.priceTiers;
@@ -143,8 +143,7 @@ export default function NewSalePage() {
 
    return (
       <div className="max-w-lg mx-auto">
-         <h1 className="text-2xl font-bold tracking-tight">New Sale</h1>
-         <p className="mt-1 text-muted-foreground">Record a product sale</p>
+         <PageHeader title="New Sale" description="Record a product sale" />
 
          {success ? (
             <Card className="mt-6">
@@ -295,13 +294,11 @@ export default function NewSalePage() {
 
                   <div className="flex flex-col gap-2">
                      <Label>Notes (optional)</Label>
-                     <textarea
+                     <ExpandingTextarea
                         value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
+                        onChange={setNotes}
                         placeholder="Sale notes..."
                         rows={2}
-                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none overflow-hidden"
-                        onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                      />
                   </div>
 

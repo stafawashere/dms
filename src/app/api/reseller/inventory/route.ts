@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { requireAuth, isAuthed, handleError } from "@/lib/api-helpers";
 
 export async function GET() {
-   const session = await auth();
-   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+   try {
+      const user = await requireAuth();
+      if (!isAuthed(user)) return user;
 
-   const inventory = await prisma.inventory.findMany({
-      where: { userId: session.user.id },
-      include: { product: { include: { category: true } } },
-      orderBy: { product: { name: "asc" } },
-   });
+      const inventory = await prisma.inventory.findMany({
+         where: { userId: user.id },
+         include: { product: { include: { category: true } } },
+         orderBy: { product: { name: "asc" } },
+      });
 
-   return NextResponse.json(inventory, { status: 200 });
+      return NextResponse.json(inventory, { status: 200 });
+   } catch (e) {
+      return handleError(e);
+   }
 }

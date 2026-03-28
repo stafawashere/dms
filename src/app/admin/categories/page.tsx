@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,11 +99,7 @@ export default function CategoriesPage() {
 
    return (
       <div>
-         <div className="flex items-center justify-between">
-            <div>
-               <h1 className="text-2xl font-bold tracking-tight">Categories</h1>
-               <p className="mt-1 text-muted-foreground">Manage your product categories</p>
-            </div>
+         <PageHeader title="Categories" description="Manage your product categories">
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
                <DialogTrigger render={<Button />}>
                   <Plus className="mr-2 h-4 w-4" />
@@ -130,7 +127,7 @@ export default function CategoriesPage() {
                   </DialogFooter>
                </DialogContent>
             </Dialog>
-         </div>
+         </PageHeader>
 
          <div className="mt-6 rounded-lg border border-border/70">
             <Table>

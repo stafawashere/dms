@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Warehouse, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { formatPrice, unitLabel } from "@/lib/formatters";
+import { Warehouse, Filter } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { SearchBar } from "@/components/search-bar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -43,11 +45,6 @@ export default function ResellerInventoryPage() {
       return () => { ignore = true; };
    }, []);
 
-   const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
-
-   const formatPrice = (n: number) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-
    const categories = Array.from(
       new Map(inventory.map((inv) => [inv.product.category.name, inv.product.category.name])).values()
    );
@@ -74,23 +71,13 @@ export default function ResellerInventoryPage() {
 
    return (
       <div>
-         <div className="flex items-center justify-between">
-            <div>
-               <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
-               <p className="mt-1 text-muted-foreground">
-                  {inventory.length} product(s) — {totalStock} total unit(s)
-               </p>
-            </div>
-         </div>
+         <PageHeader
+            title="Inventory"
+            description={`${inventory.length} product(s) — ${totalStock} total unit(s)`}
+         />
 
-         <div className="mt-4 relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-               placeholder="Search by product or category..."
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-               className="pl-9"
-            />
+         <div className="mt-4">
+            <SearchBar value={search} onChange={setSearch} placeholder="Search by product or category..." />
          </div>
 
          <div className="mt-4 rounded-md border border-border/70">

@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { formatPrice, unitLabel, formatDate } from "@/lib/formatters";
 import { useSearchParams } from "next/navigation";
-import { Search, ShoppingCart, Plus, Clock, CheckCircle } from "lucide-react";
+import { ShoppingCart, Plus, Clock, CheckCircle } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { SearchBar } from "@/components/search-bar";
+import { NoteDialog } from "@/components/note-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -28,6 +32,7 @@ import {
    SelectTrigger,
    SelectValue,
 } from "@/components/ui/select";
+import { ExpandingTextarea } from "@/components/expanding-textarea";
 import { cn } from "@/lib/utils";
 
 type Sale = {
@@ -119,13 +124,6 @@ function SalesHistoryContent() {
    }
 
    const selected = inventory.find((i) => i.product.id === productId);
-   const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
-   const formatPrice = (n: number) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-   const formatDate = (d: string) =>
-      new Date(d).toLocaleDateString("en-US", {
-         month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
-      });
 
    function getApplicablePrice(item: InventoryItem, qty: number): number {
       const tiers = item.product.priceTiers;
@@ -253,7 +251,7 @@ function SalesHistoryContent() {
                      rows.map((sale) => (
                         <TableRow key={sale.id}>
                            <TableCell className="text-muted-foreground whitespace-nowrap">
-                              {formatDate(sale.createdAt)}
+                              {formatDate(sale.createdAt, true, true)}
                            </TableCell>
                            <TableCell>
                               <div className="flex items-center gap-2">
@@ -290,27 +288,15 @@ function SalesHistoryContent() {
 
    return (
       <div>
-         <div className="flex items-center justify-between">
-            <div>
-               <h1 className="text-2xl font-bold tracking-tight">Sales</h1>
-               <p className="mt-1 text-muted-foreground">
-                  Track your sales and payment status
-               </p>
-            </div>
+         <PageHeader title="Sales" description="Track your sales and payment status">
             <Button onClick={openNewSaleDialog}>
                <Plus className="h-4 w-4 mr-2" />
                New Sale
             </Button>
-         </div>
+         </PageHeader>
 
-         <div className="mt-4 relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-               placeholder="Search by product or notes..."
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-               className="pl-9"
-            />
+         <div className="mt-4">
+            <SearchBar value={search} onChange={setSearch} placeholder="Search by product or notes..." />
          </div>
 
          {pendingSales.length > 0 && (
@@ -487,13 +473,11 @@ function SalesHistoryContent() {
 
                      <div className="flex flex-col gap-2">
                         <Label>Notes (optional)</Label>
-                        <textarea
+                        <ExpandingTextarea
                            value={notes}
-                           onChange={(e) => setNotes(e.target.value)}
+                           onChange={setNotes}
                            placeholder="Sale notes..."
                            rows={2}
-                           className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none overflow-hidden"
-                           onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                         />
                      </div>
 
@@ -511,14 +495,7 @@ function SalesHistoryContent() {
             </DialogContent>
          </Dialog>
 
-         <Dialog open={viewingNote !== null} onOpenChange={(open) => { if (!open) setViewingNote(null); }}>
-            <DialogContent className="max-w-md">
-               <DialogHeader>
-                  <DialogTitle>Note</DialogTitle>
-               </DialogHeader>
-               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewingNote}</p>
-            </DialogContent>
-         </Dialog>
+         <NoteDialog note={viewingNote} onClose={() => setViewingNote(null)} />
       </div>
    );
 }

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, Fragment } from "react";
-import { Plus, Pencil, Trash2, Search, X, Filter, Upload, ImageIcon, ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, TableIcon, Package } from "lucide-react";
+import { formatPrice, unitLabel, qtyUnit } from "@/lib/formatters";
+import { Plus, Pencil, Trash2, X, Filter, Upload, ImageIcon, ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, TableIcon, Package } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { SearchBar } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ExpandingTextarea } from "@/components/expanding-textarea";
 import { cn } from "@/lib/utils";
 
 type Category = {
@@ -299,22 +303,9 @@ export default function ProductsPage() {
       });
    }
 
-   const formatPrice = (price: number) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
-
-   const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
-   const qtyUnit = (qty: number, unit: string | null) => {
-      const u = unit ?? "unit";
-      return u.length > 2 ? `${qty} ${u}(s)` : `${qty}${u}(s)`;
-   };
-
    return (
       <div>
-         <div className="flex items-center justify-between">
-            <div>
-               <h1 className="text-2xl font-bold tracking-tight">Products</h1>
-               <p className="mt-1 text-muted-foreground">Manage your product catalog</p>
-            </div>
+         <PageHeader title="Products" description="Manage your product catalog">
             <div className="flex items-center gap-2">
                <Button
                   variant="outline"
@@ -331,18 +322,10 @@ export default function ProductsPage() {
                   Add Product
                </Button>
             </div>
-         </div>
+         </PageHeader>
 
          <div className="mt-6 flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-               <Input
-                  placeholder="Search products..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-               />
-            </div>
+            <SearchBar value={search} onChange={setSearch} placeholder="Search products..." />
          </div>
 
          {viewMode === "grid" ? (
@@ -614,14 +597,12 @@ export default function ProductsPage() {
                   </div>
                   <div className="flex flex-col gap-2">
                      <Label htmlFor="description">Description</Label>
-                     <textarea
+                     <ExpandingTextarea
                         id="description"
                         value={form.description}
-                        onChange={(e) => updateForm("description", e.target.value)}
+                        onChange={(value) => updateForm("description", value)}
                         placeholder="Optional description"
                         rows={2}
-                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none overflow-hidden"
-                        onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                      />
                   </div>
                   <div className="grid grid-cols-2 gap-4">

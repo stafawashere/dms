@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { formatPrice, formatDate, unitLabel } from "@/lib/formatters";
 import { ShoppingCart, Warehouse, Package, DollarSign } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
    Table,
@@ -45,21 +47,12 @@ export default function ResellerDashboard() {
       return () => { ignore = true; };
    }, []);
 
-   const formatPrice = (n: number) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-
-   const formatDate = (d: string) =>
-      new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-
-   const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
-
    if (loading) return <div className="p-6 text-muted-foreground">Loading...</div>;
    if (!data) return <div className="p-6 text-muted-foreground">Error loading dashboard</div>;
 
    return (
       <div>
-         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-         <p className="mt-1 text-muted-foreground">Your sales and inventory overview</p>
+         <PageHeader title="Dashboard" description="Your sales and inventory overview" />
 
          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>

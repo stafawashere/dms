@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, Fragment } from "react";
-import { Search, Package, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { formatPrice, unitLabel, qtyUnit, qtyUnitShort } from "@/lib/formatters";
+import { Package, X } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { SearchBar } from "@/components/search-bar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -58,19 +60,6 @@ export default function ResellerProductsPage() {
       return () => { ignore = true; };
    }, []);
 
-   const formatPrice = (n: number) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-
-   const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
-   const qtyUnit = (qty: number, unit: string | null) => {
-      const u = unit ?? "unit";
-      return u.length > 2 ? `${qty} ${u}(s)` : `${qty}${u}(s)`;
-   };
-   const qtyUnitShort = (qty: number, unit: string | null) => {
-      const u = unit ?? "unit";
-      return u.length > 2 ? `${qty} ${u}` : `${qty}${u}`;
-   };
-
    const filtered = products.filter((p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.category.name.toLowerCase().includes(search.toLowerCase())
@@ -92,21 +81,10 @@ export default function ResellerProductsPage() {
 
    return (
       <div>
-         <div>
-            <h1 className="text-2xl font-bold tracking-tight">Products</h1>
-            <p className="mt-1 text-muted-foreground">
-               Browse the catalog
-            </p>
-         </div>
+         <PageHeader title="Products" description="Browse the catalog" />
 
-         <div className="mt-4 relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-               placeholder="Search products..."
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-               className="pl-9"
-            />
+         <div className="mt-4">
+            <SearchBar value={search} onChange={setSearch} placeholder="Search products..." />
          </div>
 
          {filtered.length === 0 ? (

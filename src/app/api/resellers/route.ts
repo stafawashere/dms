@@ -1,35 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { requireAuth, isAuthed, handleError } from "@/lib/api-helpers";
 
 export async function GET() {
-   const resellers = await prisma.user.findMany({
-      where: { role: "RESELLER" },
-      select: {
-         id: true,
-         name: true,
-         email: true,
-         active: true,
-         createdAt: true,
-         _count: { select: { sales: true, inventory: true } },
-      },
-      orderBy: { createdAt: "desc" },
-   });
-   return NextResponse.json(resellers, { status: 200 });
+   try {
+      const user = await requireAuth(true);
+      if (!isAuthed(user)) return user;
+
+      const resellers = await prisma.user.findMany({
+         where: { role: "RESELLER" },
+         select: {
+            id: true,
+            name: true,
+            email: true,
+            active: true,
+            createdAt: true,
+            _count: { select: { sales: true, inventory: true } },
+         },
+         orderBy: { createdAt: "desc" },
+      });
+      return NextResponse.json(resellers, { status: 200 });
+   } catch (e) {
+      return handleError(e);
+   }
 }
 
 export async function POST(req: NextRequest) {
-   const { name, email, password } = await req.json();
-   if (!name || !email || !password) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+   try {
+      const user = await requireAuth(true);
+      if (!isAuthed(user)) return user;
 
-   const exists = await prisma.user.findUnique({ where: { email } });
-   if (exists) return NextResponse.json({ error: "Email already in use" }, { status: 400 });
+      const { name, email, password } = await req.json();
+      if (!name || !email || !password) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
-   const hashed = await bcrypt.hash(password, 10);
-   const reseller = await prisma.user.create({
-      data: { name, email, password: hashed, role: "RESELLER" },
-      select: { id: true, name: true, email: true, active: true, createdAt: true },
-   });
+      const exists = await prisma.user.findUnique({ where: { email } });
+      if (exists) return NextResponse.json({ error: "Email already in use" }, { status: 400 });
 
-   return NextResponse.json(reseller, { status: 201 });
+      const hashed = await bcrypt.hash(password, 10);
+      const reseller = await prisma.user.create({
+         data: { name, email, password: hashed, role: "RESELLER" },
+         select: { id: true, name: true, email: true, active: true, createdAt: true },
+      });
+
+      return NextResponse.json(reseller, { status: 201 });
+   } catch (e) {
+      return handleError(e);
+   }
 }

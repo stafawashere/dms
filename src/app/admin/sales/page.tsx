@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, Trash2, ShoppingCart, User as UserIcon, Clock, CheckCircle, Check } from "lucide-react";
+import { formatPrice, unitLabel, formatDate } from "@/lib/formatters";
+import { Plus, Trash2, ShoppingCart, User as UserIcon, Clock, CheckCircle, Check } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { SearchBar } from "@/components/search-bar";
+import { NoteDialog } from "@/components/note-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +33,7 @@ import {
    SelectTrigger,
    SelectValue,
 } from "@/components/ui/select";
+import { ExpandingTextarea } from "@/components/expanding-textarea";
 import { cn } from "@/lib/utils";
 
 type Product = {
@@ -241,20 +246,6 @@ export default function SalesPage() {
       );
    }
 
-   const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
-
-   const formatPrice = (price: number) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
-
-   const formatDate = (date: string) =>
-      new Date(date).toLocaleDateString("en-US", {
-         month: "short",
-         day: "numeric",
-         year: "numeric",
-         hour: "numeric",
-         minute: "2-digit",
-      });
-
    const filtered = sales.filter((sale) => {
       const matchesSearch =
          sale.product.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -279,18 +270,15 @@ export default function SalesPage() {
 
    return (
       <div>
-         <div className="flex items-center justify-between">
-            <div>
-               <h1 className="text-2xl font-bold tracking-tight">Sales</h1>
-               <p className="mt-1 text-muted-foreground">
-                  {totalUnits} unit(s) sold — {formatPrice(totalRevenue)} revenue
-               </p>
-            </div>
+         <PageHeader
+            title="Sales"
+            description={`${totalUnits} unit(s) sold — ${formatPrice(totalRevenue)} revenue`}
+         >
             <Button onClick={openNewSale}>
                <Plus className="mr-2 h-4 w-4" />
                New Sale
             </Button>
-         </div>
+         </PageHeader>
 
          {resellers.length > 0 && (
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -331,15 +319,7 @@ export default function SalesPage() {
          )}
 
          <div className="mt-6 flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-               <Input
-                  placeholder="Search by product, reseller, or notes..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-               />
-            </div>
+            <SearchBar value={search} onChange={setSearch} placeholder="Search by product, reseller, or notes..." />
             {resellerFilter !== "all" && (
                <Button
                   variant="ghost"
@@ -388,7 +368,7 @@ export default function SalesPage() {
                         {pendingSales.map((sale) => (
                            <TableRow key={sale.id}>
                               <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                 {formatDate(sale.createdAt)}
+                                 {formatDate(sale.createdAt, true, true)}
                               </TableCell>
                               <TableCell>
                                  <div className="flex items-center gap-2">
@@ -481,7 +461,7 @@ export default function SalesPage() {
                         approvedSales.map((sale) => (
                            <TableRow key={sale.id}>
                               <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                 {formatDate(sale.createdAt)}
+                                 {formatDate(sale.createdAt, true, true)}
                               </TableCell>
                               <TableCell>
                                  <div className="flex items-center gap-2">
@@ -665,14 +645,12 @@ export default function SalesPage() {
                   )}
                   <div className="flex flex-col gap-2">
                      <Label htmlFor="sale-notes">Notes (optional)</Label>
-                     <textarea
+                     <ExpandingTextarea
                         id="sale-notes"
                         value={form.notes}
-                        onChange={(e) => updateForm("notes", e.target.value)}
+                        onChange={(value) => updateForm("notes", value)}
                         placeholder="Sale notes..."
                         rows={2}
-                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none overflow-hidden"
-                        onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                      />
                   </div>
                   {error && (
@@ -709,14 +687,7 @@ export default function SalesPage() {
             </DialogContent>
          </Dialog>
 
-         <Dialog open={viewingNote !== null} onOpenChange={(open) => { if (!open) setViewingNote(null); }}>
-            <DialogContent className="max-w-md">
-               <DialogHeader>
-                  <DialogTitle>Note</DialogTitle>
-               </DialogHeader>
-               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewingNote}</p>
-            </DialogContent>
-         </Dialog>
+         <NoteDialog note={viewingNote} onClose={() => setViewingNote(null)} />
       </div>
    );
 }

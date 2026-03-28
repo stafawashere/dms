@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, ArrowUpDown, Package, User as UserIcon } from "lucide-react";
+import { unitLabel } from "@/lib/formatters";
+import { Plus, ArrowUpDown, Package, User as UserIcon } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { SearchBar } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +32,7 @@ import {
    SelectTrigger,
    SelectValue,
 } from "@/components/ui/select";
+import { ExpandingTextarea } from "@/components/expanding-textarea";
 import { cn } from "@/lib/utils";
 
 type UserInfo = {
@@ -135,8 +139,6 @@ export default function InventoryPage() {
       fetchInventory();
    }
 
-   const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
-
    const filtered = inventory.filter((inv) => {
       const matchesSearch =
          inv.product.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -158,16 +160,12 @@ export default function InventoryPage() {
 
    return (
       <div>
-         <div className="flex items-center justify-between">
-            <div>
-               <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
-               <p className="mt-1 text-muted-foreground">Manage stock across all users</p>
-            </div>
+         <PageHeader title="Inventory" description="Manage stock across all users">
             <Button onClick={openTransfer}>
                <Plus className="mr-2 h-4 w-4" />
                Move Stock
             </Button>
-         </div>
+         </PageHeader>
 
          {Object.keys(stockByUser).length > 0 && (
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -203,15 +201,7 @@ export default function InventoryPage() {
          )}
 
          <div className="mt-6 flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-               <Input
-                  placeholder="Search by product or user..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-               />
-            </div>
+            <SearchBar value={search} onChange={setSearch} placeholder="Search by product or user..." />
             {userFilter !== "all" && (
                <Button
                   variant="ghost"
@@ -370,14 +360,12 @@ export default function InventoryPage() {
                   </div>
                   <div className="flex flex-col gap-2">
                      <Label htmlFor="transfer-note">Note (optional)</Label>
-                     <textarea
+                     <ExpandingTextarea
                         id="transfer-note"
                         value={form.note}
-                        onChange={(e) => updateForm("note", e.target.value)}
+                        onChange={(value) => updateForm("note", value)}
                         placeholder="Reason for movement..."
                         rows={2}
-                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none overflow-hidden"
-                        onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                      />
                   </div>
                </div>

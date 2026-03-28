@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, Pencil, UserX, UserCheck, Eye, Trash2, DatabaseZap } from "lucide-react";
+import { formatPrice, formatDate } from "@/lib/formatters";
+import { Plus, Pencil, UserX, UserCheck, Eye, Trash2, DatabaseZap } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { SearchBar } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -189,39 +192,19 @@ export default function ResellersPage() {
          r.email.toLowerCase().includes(search.toLowerCase())
    );
 
-   function formatDate(d: string) {
-      return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-   }
-
-   function formatPrice(n: number) {
-      return `$${Number(n).toFixed(2)}`;
-   }
-
    if (loading) return <div className="p-6 text-muted-foreground">Loading...</div>;
 
    return (
       <div>
-         <div className="flex items-center justify-between">
-            <div>
-               <h1 className="text-2xl font-bold tracking-tight">Resellers</h1>
-               <p className="mt-1 text-muted-foreground">Manage your reseller accounts</p>
-            </div>
+         <PageHeader title="Resellers" description="Manage your reseller accounts">
             <Button onClick={() => { setForm(emptyForm); setError(""); setDialogOpen(true); }}>
                <Plus className="mr-2 h-4 w-4" />
                Add Reseller
             </Button>
-         </div>
+         </PageHeader>
 
          <div className="mt-6 flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-               <Input
-                  placeholder="Search by name or email..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-               />
-            </div>
+            <SearchBar value={search} onChange={setSearch} placeholder="Search by name or email..." />
          </div>
 
          <div className="mt-4 rounded-md border border-border/70">
@@ -256,7 +239,7 @@ export default function ResellersPage() {
                            </TableCell>
                            <TableCell>{reseller._count.sales}</TableCell>
                            <TableCell>{reseller._count.inventory}</TableCell>
-                           <TableCell className="text-muted-foreground">{formatDate(reseller.createdAt)}</TableCell>
+                           <TableCell className="text-muted-foreground">{formatDate(reseller.createdAt, false, true)}</TableCell>
                            <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-1">
                                  <Button variant="ghost" size="icon" onClick={() => openDetail(reseller.id)}>
@@ -410,7 +393,7 @@ export default function ResellersPage() {
                                           <TableCell>{sale.product.name}</TableCell>
                                           <TableCell>{sale.quantity}</TableCell>
                                           <TableCell>{formatPrice(sale.soldPrice)}</TableCell>
-                                          <TableCell className="text-muted-foreground">{formatDate(sale.createdAt)}</TableCell>
+                                          <TableCell className="text-muted-foreground">{formatDate(sale.createdAt, false, true)}</TableCell>
                                        </TableRow>
                                     ))}
                                  </TableBody>

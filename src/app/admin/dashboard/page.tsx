@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { formatPrice, formatDate } from "@/lib/formatters";
 import {
    Package,
    Users,
@@ -11,6 +12,7 @@ import {
    AlertTriangle,
    X,
 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -78,21 +80,12 @@ export default function AdminDashboard() {
       setAlertsDismissed(true);
    }
 
-   const formatPrice = (n: number) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-
-   const formatDate = (d: string) =>
-      new Date(d).toLocaleDateString("en-US", {
-         month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-      });
-
    if (loading) return <div className="p-6 text-muted-foreground">Loading...</div>;
    if (!data) return <div className="p-6 text-muted-foreground">Error loading dashboard</div>;
 
    return (
       <div>
-         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-         <p className="mt-1 text-muted-foreground">Overview of your distribution network</p>
+         <PageHeader title="Dashboard" description="Overview of your distribution network" />
 
          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>

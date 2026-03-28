@@ -87,6 +87,7 @@ export default function SalesPage() {
    const [products, setProducts] = useState<Product[]>([]);
    const [loading, setLoading] = useState(true);
    const [search, setSearch] = useState("");
+   const [viewingNote, setViewingNote] = useState<string | null>(null);
    const [dialogOpen, setDialogOpen] = useState(false);
    const [form, setForm] = useState<SaleForm>(emptyForm);
    const [submitting, setSubmitting] = useState(false);
@@ -294,7 +295,7 @@ export default function SalesPage() {
          {resellers.length > 0 && (
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                {resellers.map((reseller) => {
-                  const resellerSales = sales.filter((s) => s.resellerId === reseller.id);
+                  const resellerSales = sales.filter((s) => s.resellerId === reseller.id && s.status === "APPROVED");
                   const revenue = resellerSales.reduce((sum, s) => sum + Number(s.soldPrice) * s.quantity, 0);
                   const units = resellerSales.reduce((sum, s) => sum + s.quantity, 0);
                   return (
@@ -370,17 +371,17 @@ export default function SalesPage() {
                   </Button>
                </div>
                <div className="rounded-lg border border-yellow-500/30">
-                  <Table>
+                  <Table className="table-fixed">
                      <TableHeader>
                         <TableRow>
-                           <TableHead>Date</TableHead>
-                           <TableHead>Product</TableHead>
-                           <TableHead>Reseller</TableHead>
-                           <TableHead className="text-right">Qty</TableHead>
-                           <TableHead className="text-right">Price</TableHead>
-                           <TableHead className="text-right">Total</TableHead>
-                           <TableHead>Notes</TableHead>
-                           <TableHead className="w-24 text-right">Actions</TableHead>
+                           <TableHead className="w-[18%]">Date</TableHead>
+                           <TableHead className="w-[18%]">Product</TableHead>
+                           <TableHead className="w-[14%]">Reseller</TableHead>
+                           <TableHead className="w-[8%] text-right">Qty</TableHead>
+                           <TableHead className="w-[14%] text-right">Price</TableHead>
+                           <TableHead className="w-[10%] text-right">Total</TableHead>
+                           <TableHead className="w-[12%]">Notes</TableHead>
+                           <TableHead className="w-[6%] text-right">Actions</TableHead>
                         </TableRow>
                      </TableHeader>
                      <TableBody>
@@ -405,7 +406,13 @@ export default function SalesPage() {
                               <TableCell className="text-right font-medium">
                                  {formatPrice(Number(sale.soldPrice) * sale.quantity)}
                               </TableCell>
-                              <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                              <TableCell
+                                 className={cn(
+                                    "text-sm text-muted-foreground truncate",
+                                    sale.notes && "cursor-pointer hover:text-foreground"
+                                 )}
+                                 onClick={() => sale.notes && setViewingNote(sale.notes)}
+                              >
                                  {sale.notes || "-"}
                               </TableCell>
                               <TableCell className="text-right">
@@ -442,17 +449,17 @@ export default function SalesPage() {
                )}
             </div>
             <div className="rounded-lg border border-border/70">
-               <Table>
+               <Table className="table-fixed">
                   <TableHeader>
                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Reseller</TableHead>
-                        <TableHead className="text-right">Qty</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                        <TableHead>Notes</TableHead>
-                        <TableHead className="w-16 text-right">Actions</TableHead>
+                        <TableHead className="w-[18%]">Date</TableHead>
+                        <TableHead className="w-[18%]">Product</TableHead>
+                        <TableHead className="w-[14%]">Reseller</TableHead>
+                        <TableHead className="w-[8%] text-right">Qty</TableHead>
+                        <TableHead className="w-[14%] text-right">Price</TableHead>
+                        <TableHead className="w-[10%] text-right">Total</TableHead>
+                        <TableHead className="w-[12%]">Notes</TableHead>
+                        <TableHead className="w-[6%] text-right">Actions</TableHead>
                      </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -492,7 +499,13 @@ export default function SalesPage() {
                               <TableCell className="text-right font-medium">
                                  {formatPrice(Number(sale.soldPrice) * sale.quantity)}
                               </TableCell>
-                              <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                              <TableCell
+                                 className={cn(
+                                    "text-sm text-muted-foreground truncate",
+                                    sale.notes && "cursor-pointer hover:text-foreground"
+                                 )}
+                                 onClick={() => sale.notes && setViewingNote(sale.notes)}
+                              >
                                  {sale.notes || "-"}
                               </TableCell>
                               <TableCell className="text-right">
@@ -652,11 +665,14 @@ export default function SalesPage() {
                   )}
                   <div className="flex flex-col gap-2">
                      <Label htmlFor="sale-notes">Notes (optional)</Label>
-                     <Input
+                     <textarea
                         id="sale-notes"
                         value={form.notes}
                         onChange={(e) => updateForm("notes", e.target.value)}
                         placeholder="Sale notes..."
+                        rows={2}
+                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none overflow-hidden"
+                        onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                      />
                   </div>
                   {error && (
@@ -690,6 +706,15 @@ export default function SalesPage() {
                      Delete
                   </Button>
                </DialogFooter>
+            </DialogContent>
+         </Dialog>
+
+         <Dialog open={viewingNote !== null} onOpenChange={(open) => { if (!open) setViewingNote(null); }}>
+            <DialogContent className="max-w-md">
+               <DialogHeader>
+                  <DialogTitle>Note</DialogTitle>
+               </DialogHeader>
+               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewingNote}</p>
             </DialogContent>
          </Dialog>
       </div>

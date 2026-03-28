@@ -67,6 +67,7 @@ function SalesHistoryContent() {
    const [sales, setSales] = useState<Sale[]>([]);
    const [loading, setLoading] = useState(true);
    const [search, setSearch] = useState("");
+   const [viewingNote, setViewingNote] = useState<string | null>(null);
 
    const [dialogOpen, setDialogOpen] = useState(false);
    const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -230,15 +231,15 @@ function SalesHistoryContent() {
    function SalesTable({ rows, emptyMessage }: { rows: Sale[]; emptyMessage: string }) {
       return (
          <div className="rounded-md border border-border/70">
-            <Table>
+            <Table className="table-fixed">
                <TableHeader>
                   <TableRow>
-                     <TableHead>Date</TableHead>
-                     <TableHead>Product</TableHead>
-                     <TableHead className="text-right">Qty</TableHead>
-                     <TableHead className="text-right">Price</TableHead>
-                     <TableHead className="text-right">Total</TableHead>
-                     <TableHead>Notes</TableHead>
+                     <TableHead className="w-[30%]">Date</TableHead>
+                     <TableHead className="w-[25%]">Product</TableHead>
+                     <TableHead className="w-[10%] text-right">Qty</TableHead>
+                     <TableHead className="w-[15%] text-right">Price</TableHead>
+                     <TableHead className="w-[10%] text-right">Total</TableHead>
+                     <TableHead className="w-[10%]">Notes</TableHead>
                   </TableRow>
                </TableHeader>
                <TableBody>
@@ -269,7 +270,13 @@ function SalesHistoryContent() {
                            <TableCell className="text-right font-medium">
                               {formatPrice(Number(sale.soldPrice) * sale.quantity)}
                            </TableCell>
-                           <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                           <TableCell
+                              className={cn(
+                                 "text-sm text-muted-foreground truncate",
+                                 sale.notes && "cursor-pointer hover:text-foreground"
+                              )}
+                              onClick={() => sale.notes && setViewingNote(sale.notes)}
+                           >
                               {sale.notes || "-"}
                            </TableCell>
                         </TableRow>
@@ -480,10 +487,13 @@ function SalesHistoryContent() {
 
                      <div className="flex flex-col gap-2">
                         <Label>Notes (optional)</Label>
-                        <Input
+                        <textarea
                            value={notes}
                            onChange={(e) => setNotes(e.target.value)}
                            placeholder="Sale notes..."
+                           rows={2}
+                           className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none overflow-hidden"
+                           onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                         />
                      </div>
 
@@ -498,6 +508,15 @@ function SalesHistoryContent() {
                      </Button>
                   </div>
                )}
+            </DialogContent>
+         </Dialog>
+
+         <Dialog open={viewingNote !== null} onOpenChange={(open) => { if (!open) setViewingNote(null); }}>
+            <DialogContent className="max-w-md">
+               <DialogHeader>
+                  <DialogTitle>Note</DialogTitle>
+               </DialogHeader>
+               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewingNote}</p>
             </DialogContent>
          </Dialog>
       </div>

@@ -370,11 +370,14 @@ export default function InventoryPage() {
                   </div>
                   <div className="flex flex-col gap-2">
                      <Label htmlFor="transfer-note">Note (optional)</Label>
-                     <Input
+                     <textarea
                         id="transfer-note"
                         value={form.note}
                         onChange={(e) => updateForm("note", e.target.value)}
                         placeholder="Reason for movement..."
+                        rows={2}
+                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none overflow-hidden"
+                        onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                      />
                   </div>
                </div>

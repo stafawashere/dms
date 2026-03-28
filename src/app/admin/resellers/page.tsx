@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, Pencil, UserX, UserCheck, Eye, Trash2 } from "lucide-react";
+import { Plus, Search, Pencil, UserX, UserCheck, Eye, Trash2, DatabaseZap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ import {
    DialogFooter,
    DialogClose,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 type Reseller = {
@@ -61,6 +62,9 @@ export default function ResellersPage() {
    const [error, setError] = useState("");
    const [confirmToggle, setConfirmToggle] = useState<Reseller | null>(null);
    const [confirmDelete, setConfirmDelete] = useState<Reseller | null>(null);
+   const [wipeTarget, setWipeTarget] = useState<Reseller | null>(null);
+   const [wipeOptions, setWipeOptions] = useState({ sales: false, inventory: false, movements: false });
+   const [wiping, setWiping] = useState(false);
 
    useEffect(() => {
       let ignore = false;
@@ -156,6 +160,29 @@ export default function ResellersPage() {
       setEditDialog(true);
    }
 
+   function openWipe(reseller: Reseller) {
+      setWipeTarget(reseller);
+      setWipeOptions({ sales: false, inventory: false, movements: false });
+   }
+
+   async function handleWipe() {
+      if (!wipeTarget) return;
+      if (!wipeOptions.sales && !wipeOptions.inventory && !wipeOptions.movements) return;
+      setWiping(true);
+
+      await fetch(`/api/resellers/${wipeTarget.id}/wipe`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify(wipeOptions),
+      });
+
+      setWiping(false);
+      setWipeTarget(null);
+      fetchResellers();
+   }
+
+   const allWipeSelected = wipeOptions.sales && wipeOptions.inventory && wipeOptions.movements;
+
    const filtered = resellers.filter(
       (r) =>
          r.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -237,6 +264,9 @@ export default function ResellersPage() {
                                  </Button>
                                  <Button variant="ghost" size="icon" onClick={() => openEdit(reseller)}>
                                     <Pencil className="h-4 w-4" />
+                                 </Button>
+                                 <Button variant="ghost" size="icon" onClick={() => openWipe(reseller)}>
+                                    <DatabaseZap className="h-4 w-4" />
                                  </Button>
                                  <Button variant="ghost" size="icon" onClick={() => setConfirmToggle(reseller)}>
                                     {reseller.active ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
@@ -436,6 +466,63 @@ export default function ResellersPage() {
                      onClick={() => confirmToggle && handleToggleActive(confirmToggle)}
                   >
                      {confirmToggle?.active ? "Deactivate" : "Reactivate"}
+                  </Button>
+               </DialogFooter>
+            </DialogContent>
+         </Dialog>
+
+         <Dialog open={!!wipeTarget} onOpenChange={() => setWipeTarget(null)}>
+            <DialogContent className="sm:max-w-sm">
+               <DialogHeader>
+                  <DialogTitle>Wipe Data &mdash; {wipeTarget?.name}</DialogTitle>
+               </DialogHeader>
+               <p className="text-sm text-muted-foreground">
+                  Select data to wipe for this reseller. This cannot be undone.
+               </p>
+               <div className="flex flex-col gap-3 py-2">
+                  <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                     <Checkbox
+                        checked={allWipeSelected}
+                        onCheckedChange={(checked) =>
+                           setWipeOptions({ sales: !!checked, inventory: !!checked, movements: !!checked })
+                        }
+                     />
+                     Select All
+                  </label>
+                  <div className="ml-6 flex flex-col gap-3">
+                     <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                           checked={wipeOptions.sales}
+                           onCheckedChange={(checked) => setWipeOptions({ ...wipeOptions, sales: !!checked })}
+                        />
+                        Sales History
+                     </label>
+                     <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                           checked={wipeOptions.inventory}
+                           onCheckedChange={(checked) => setWipeOptions({ ...wipeOptions, inventory: !!checked })}
+                        />
+                        Inventory
+                     </label>
+                     <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                           checked={wipeOptions.movements}
+                           onCheckedChange={(checked) => setWipeOptions({ ...wipeOptions, movements: !!checked })}
+                        />
+                        Stock Movements
+                     </label>
+                  </div>
+               </div>
+               <DialogFooter>
+                  <DialogClose render={<Button variant="outline" />}>
+                     Cancel
+                  </DialogClose>
+                  <Button
+                     variant="destructive"
+                     onClick={handleWipe}
+                     disabled={wiping || (!wipeOptions.sales && !wipeOptions.inventory && !wipeOptions.movements)}
+                  >
+                     {wiping ? "Wiping..." : "Wipe Selected Data"}
                   </Button>
                </DialogFooter>
             </DialogContent>

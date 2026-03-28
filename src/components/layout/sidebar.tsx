@@ -30,8 +30,9 @@ export default function Sidebar() {
    return (
       <aside className="hidden md:flex md:w-64 md:flex-col border-r border-border/40 bg-sidebar">
          <div className="flex h-16 items-center px-6">
-            <Link href="/admin/dashboard" className="flex items-center gap-2">
+            <Link href="/admin/dashboard" className="flex items-center gap-3">
                <span className="text-xl font-bold tracking-tight">DMS</span>
+               <span className="rounded-md bg-primary/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-primary">Admin</span>
             </Link>
          </div>
          <Separator className="opacity-40" />

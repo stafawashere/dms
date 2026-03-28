@@ -7,7 +7,6 @@ import {
    DollarSign,
    TrendingUp,
    ShoppingCart,
-   Warehouse,
    ArrowUpDown,
    AlertTriangle,
    X,

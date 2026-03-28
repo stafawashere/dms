@@ -2,10 +2,11 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, ShoppingCart, Plus } from "lucide-react";
+import { Search, ShoppingCart, Plus, Clock, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
    Table,
    TableBody,
@@ -34,6 +35,7 @@ type Sale = {
    quantity: number;
    soldPrice: number;
    notes: string | null;
+   status: "PENDING" | "APPROVED";
    createdAt: string;
    product: { name: string; unit: string | null };
 };
@@ -217,37 +219,17 @@ function SalesHistoryContent() {
       (s.notes && s.notes.toLowerCase().includes(search.toLowerCase()))
    );
 
-   const totalRevenue = filtered.reduce((sum, s) => sum + Number(s.soldPrice) * s.quantity, 0);
-   const totalUnits = filtered.reduce((sum, s) => sum + s.quantity, 0);
+   const pendingSales = filtered.filter((s) => s.status === "PENDING");
+   const approvedSales = filtered.filter((s) => s.status === "APPROVED");
+
+   const totalRevenue = approvedSales.reduce((sum, s) => sum + Number(s.soldPrice) * s.quantity, 0);
+   const totalUnits = approvedSales.reduce((sum, s) => sum + s.quantity, 0);
 
    if (loading) return <div className="p-6 text-muted-foreground">Loading...</div>;
 
-   return (
-      <div>
-         <div className="flex items-center justify-between">
-            <div>
-               <h1 className="text-2xl font-bold tracking-tight">Sales</h1>
-               <p className="mt-1 text-muted-foreground">
-                  {totalUnits} unit(s) sold — {formatPrice(totalRevenue)} revenue
-               </p>
-            </div>
-            <Button onClick={openNewSaleDialog}>
-               <Plus className="h-4 w-4 mr-2" />
-               New Sale
-            </Button>
-         </div>
-
-         <div className="mt-4 relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-               placeholder="Search by product or notes..."
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-               className="pl-9"
-            />
-         </div>
-
-         <div className="mt-4 rounded-md border border-border/70">
+   function SalesTable({ rows, emptyMessage }: { rows: Sale[]; emptyMessage: string }) {
+      return (
+         <div className="rounded-md border border-border/70">
             <Table>
                <TableHeader>
                   <TableRow>
@@ -260,14 +242,14 @@ function SalesHistoryContent() {
                   </TableRow>
                </TableHeader>
                <TableBody>
-                  {filtered.length === 0 ? (
+                  {rows.length === 0 ? (
                      <TableRow>
                         <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                           {search ? "No sales match your search" : "No sales recorded yet"}
+                           {emptyMessage}
                         </TableCell>
                      </TableRow>
                   ) : (
-                     filtered.map((sale) => (
+                     rows.map((sale) => (
                         <TableRow key={sale.id}>
                            <TableCell className="text-muted-foreground whitespace-nowrap">
                               {formatDate(sale.createdAt)}
@@ -295,6 +277,59 @@ function SalesHistoryContent() {
                   )}
                </TableBody>
             </Table>
+         </div>
+      );
+   }
+
+   return (
+      <div>
+         <div className="flex items-center justify-between">
+            <div>
+               <h1 className="text-2xl font-bold tracking-tight">Sales</h1>
+               <p className="mt-1 text-muted-foreground">
+                  Track your sales and payment status
+               </p>
+            </div>
+            <Button onClick={openNewSaleDialog}>
+               <Plus className="h-4 w-4 mr-2" />
+               New Sale
+            </Button>
+         </div>
+
+         <div className="mt-4 relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+               placeholder="Search by product or notes..."
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+               className="pl-9"
+            />
+         </div>
+
+         {pendingSales.length > 0 && (
+            <div className="mt-6">
+               <div className="flex items-center gap-2 mb-3">
+                  <Clock className="h-4 w-4 text-yellow-500" />
+                  <h2 className="text-lg font-semibold">Pending Approval</h2>
+                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/40" variant="outline">
+                     {pendingSales.length}
+                  </Badge>
+               </div>
+               <SalesTable rows={pendingSales} emptyMessage="No pending sales" />
+            </div>
+         )}
+
+         <div className="mt-6">
+            <div className="flex items-center gap-2 mb-3">
+               <CheckCircle className="h-4 w-4 text-emerald-500" />
+               <h2 className="text-lg font-semibold">Approved Sales</h2>
+               {approvedSales.length > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                     {totalUnits} unit(s) — {formatPrice(totalRevenue)} revenue
+                  </span>
+               )}
+            </div>
+            <SalesTable rows={approvedSales} emptyMessage={search ? "No sales match your search" : "No approved sales yet"} />
          </div>
 
          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>

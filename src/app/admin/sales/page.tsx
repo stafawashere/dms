@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, Trash2, ShoppingCart, User as UserIcon } from "lucide-react";
+import { Plus, Search, Trash2, ShoppingCart, User as UserIcon, Clock, CheckCircle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +54,7 @@ type Sale = {
    quantity: number;
    soldPrice: number;
    notes: string | null;
+   status: "PENDING" | "APPROVED";
    createdAt: string;
    product: Product;
    reseller: Reseller;
@@ -222,6 +223,23 @@ export default function SalesPage() {
       fetchSales();
    }
 
+   async function handleApprove(id: string) {
+      const res = await fetch(`/api/sales/${id}/approve`, { method: "PATCH" });
+      if (res.ok) {
+         setSales((prev) => prev.map((s) => s.id === id ? { ...s, status: "APPROVED" } : s));
+      }
+   }
+
+   async function handleApproveAll() {
+      const pending = filtered.filter((s) => s.status === "PENDING");
+      await Promise.all(
+         pending.map((s) => fetch(`/api/sales/${s.id}/approve`, { method: "PATCH" }))
+      );
+      setSales((prev) =>
+         prev.map((s) => pending.find((p) => p.id === s.id) ? { ...s, status: "APPROVED" } : s)
+      );
+   }
+
    const unitLabel = (unit: string | null) => unit ? `${unit}(s)` : "unit(s)";
 
    const formatPrice = (price: number) =>
@@ -249,8 +267,12 @@ export default function SalesPage() {
       new Map(sales.map((s) => [s.resellerId, s.reseller])).values()
    );
 
-   const totalRevenue = filtered.reduce((sum, s) => sum + Number(s.soldPrice) * s.quantity, 0);
-   const totalUnits = filtered.reduce((sum, s) => sum + s.quantity, 0);
+   const pendingSales = filtered.filter((s) => s.status === "PENDING");
+   const approvedSales = filtered.filter((s) => s.status === "APPROVED");
+
+   const totalRevenue = approvedSales.reduce((sum, s) => sum + Number(s.soldPrice) * s.quantity, 0);
+   const totalUnits = approvedSales.reduce((sum, s) => sum + s.quantity, 0);
+   const pendingRevenue = pendingSales.reduce((sum, s) => sum + Number(s.soldPrice) * s.quantity, 0);
 
    const selectedProduct = products.find((p) => p.id === form.productId);
 
@@ -329,70 +351,161 @@ export default function SalesPage() {
             )}
          </div>
 
-         <div className="mt-4 rounded-lg border border-border/70">
-            <Table>
-               <TableHeader>
-                  <TableRow>
-                     <TableHead>Date</TableHead>
-                     <TableHead>Product</TableHead>
-                     <TableHead>Reseller</TableHead>
-                     <TableHead className="text-right">Qty</TableHead>
-                     <TableHead className="text-right">Price</TableHead>
-                     <TableHead className="text-right">Total</TableHead>
-                     <TableHead>Notes</TableHead>
-                     <TableHead className="w-16 text-right">Actions</TableHead>
-                  </TableRow>
-               </TableHeader>
-               <TableBody>
-                  {loading ? (
+         {pendingSales.length > 0 && (
+            <div className="mt-6">
+               <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                     <Clock className="h-4 w-4 text-yellow-500" />
+                     <h2 className="text-lg font-semibold">Pending Approval</h2>
+                     <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/40" variant="outline">
+                        {pendingSales.length}
+                     </Badge>
+                     <span className="text-sm text-muted-foreground ml-2">
+                        {formatPrice(pendingRevenue)} pending
+                     </span>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={handleApproveAll} className="text-xs">
+                     <Check className="h-3 w-3 mr-1" />
+                     Approve All
+                  </Button>
+               </div>
+               <div className="rounded-lg border border-yellow-500/30">
+                  <Table>
+                     <TableHeader>
+                        <TableRow>
+                           <TableHead>Date</TableHead>
+                           <TableHead>Product</TableHead>
+                           <TableHead>Reseller</TableHead>
+                           <TableHead className="text-right">Qty</TableHead>
+                           <TableHead className="text-right">Price</TableHead>
+                           <TableHead className="text-right">Total</TableHead>
+                           <TableHead>Notes</TableHead>
+                           <TableHead className="w-24 text-right">Actions</TableHead>
+                        </TableRow>
+                     </TableHeader>
+                     <TableBody>
+                        {pendingSales.map((sale) => (
+                           <TableRow key={sale.id}>
+                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                 {formatDate(sale.createdAt)}
+                              </TableCell>
+                              <TableCell>
+                                 <div className="flex items-center gap-2">
+                                    <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">{sale.product.name}</span>
+                                 </div>
+                              </TableCell>
+                              <TableCell>{sale.reseller.name}</TableCell>
+                              <TableCell className="text-right">
+                                 {sale.quantity} {unitLabel(sale.product.unit)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                 {formatPrice(Number(sale.soldPrice))}/{unitLabel(sale.product.unit)}
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                 {formatPrice(Number(sale.soldPrice) * sale.quantity)}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                                 {sale.notes || "-"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                 <div className="flex items-center justify-end gap-1">
+                                    <Button
+                                       variant="ghost"
+                                       size="icon"
+                                       className="h-8 w-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+                                       onClick={() => handleApprove(sale.id)}
+                                    >
+                                       <CheckCircle className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setConfirmDelete(sale.id)}>
+                                       <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                 </div>
+                              </TableCell>
+                           </TableRow>
+                        ))}
+                     </TableBody>
+                  </Table>
+               </div>
+            </div>
+         )}
+
+         <div className="mt-6">
+            <div className="flex items-center gap-2 mb-3">
+               <CheckCircle className="h-4 w-4 text-emerald-500" />
+               <h2 className="text-lg font-semibold">Approved Sales</h2>
+               {approvedSales.length > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                     {totalUnits} unit(s) — {formatPrice(totalRevenue)} revenue
+                  </span>
+               )}
+            </div>
+            <div className="rounded-lg border border-border/70">
+               <Table>
+                  <TableHeader>
                      <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground">
-                           Loading...
-                        </TableCell>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Reseller</TableHead>
+                        <TableHead className="text-right">Qty</TableHead>
+                        <TableHead className="text-right">Price</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead>Notes</TableHead>
+                        <TableHead className="w-16 text-right">Actions</TableHead>
                      </TableRow>
-                  ) : filtered.length === 0 ? (
-                     <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground">
-                           {search || resellerFilter !== "all"
-                              ? "No sales match your filter"
-                              : "No sales recorded yet"}
-                        </TableCell>
-                     </TableRow>
-                  ) : (
-                     filtered.map((sale) => (
-                        <TableRow key={sale.id}>
-                           <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                              {formatDate(sale.createdAt)}
-                           </TableCell>
-                           <TableCell>
-                              <div className="flex items-center gap-2">
-                                 <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                                 <span className="font-medium">{sale.product.name}</span>
-                              </div>
-                           </TableCell>
-                           <TableCell>{sale.reseller.name}</TableCell>
-                           <TableCell className="text-right">
-                              {sale.quantity} {unitLabel(sale.product.unit)}
-                           </TableCell>
-                           <TableCell className="text-right">
-                              {formatPrice(Number(sale.soldPrice))}/{unitLabel(sale.product.unit)}
-                           </TableCell>
-                           <TableCell className="text-right font-medium">
-                              {formatPrice(Number(sale.soldPrice) * sale.quantity)}
-                           </TableCell>
-                           <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                              {sale.notes || "-"}
-                           </TableCell>
-                           <TableCell className="text-right">
-                              <Button variant="ghost" size="icon" onClick={() => setConfirmDelete(sale.id)}>
-                                 <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                  </TableHeader>
+                  <TableBody>
+                     {loading ? (
+                        <TableRow>
+                           <TableCell colSpan={8} className="text-center text-muted-foreground">
+                              Loading...
                            </TableCell>
                         </TableRow>
-                     ))
-                  )}
-               </TableBody>
-            </Table>
+                     ) : approvedSales.length === 0 ? (
+                        <TableRow>
+                           <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                              {search || resellerFilter !== "all"
+                                 ? "No sales match your filter"
+                                 : "No approved sales yet"}
+                           </TableCell>
+                        </TableRow>
+                     ) : (
+                        approvedSales.map((sale) => (
+                           <TableRow key={sale.id}>
+                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                 {formatDate(sale.createdAt)}
+                              </TableCell>
+                              <TableCell>
+                                 <div className="flex items-center gap-2">
+                                    <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">{sale.product.name}</span>
+                                 </div>
+                              </TableCell>
+                              <TableCell>{sale.reseller.name}</TableCell>
+                              <TableCell className="text-right">
+                                 {sale.quantity} {unitLabel(sale.product.unit)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                 {formatPrice(Number(sale.soldPrice))}/{unitLabel(sale.product.unit)}
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                 {formatPrice(Number(sale.soldPrice) * sale.quantity)}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                                 {sale.notes || "-"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                 <Button variant="ghost" size="icon" onClick={() => setConfirmDelete(sale.id)}>
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                 </Button>
+                              </TableCell>
+                           </TableRow>
+                        ))
+                     )}
+                  </TableBody>
+               </Table>
+            </div>
          </div>
 
          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

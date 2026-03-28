@@ -271,8 +271,8 @@ function ProductCard({
             <Badge
                className={`absolute top-2 right-2 text-[10px] px-1.5 py-0 ${
                   inStock
-                     ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                     : "bg-red-500/15 text-red-400 border-red-500/30"
+                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                     : "bg-red-500/30 text-red-300 border-red-500/50"
                }`}
                variant="outline"
             >

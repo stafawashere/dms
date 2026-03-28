@@ -23,7 +23,7 @@ export async function GET() {
          prisma.user.count({ where: { role: "RESELLER", active: true } }),
          prisma.sale.findMany({ where: { status: "APPROVED" }, include: { product: true, reseller: { select: { name: true } } } }),
          prisma.sale.findMany({
-            where: { createdAt: { gte: sevenDaysAgo } },
+            where: { status: "APPROVED", createdAt: { gte: sevenDaysAgo } },
             include: { product: true, reseller: { select: { name: true } } },
             orderBy: { createdAt: "desc" },
             take: 10,

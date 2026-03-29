@@ -36,6 +36,7 @@ prisma/*.db
 
 # Planning (local only)
 .planning/
+.cursor/
 
 # Vercel
 .vercel

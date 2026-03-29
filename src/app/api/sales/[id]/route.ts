@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { requireAuth, isAuthed, handleError } from "@/lib/api-helpers";
+import { ServiceError } from "@/lib/errors";
+import { getSale, deleteSaleAndRestoreStock } from "@/lib/services/sales.service";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
    try {
@@ -8,15 +9,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       if (!isAuthed(user)) return user;
 
       const { id } = await params;
-
-      const sale = await prisma.sale.findUnique({
-         where: { id },
-         include: { product: true, reseller: { select: { id: true, name: true, email: true } } },
-      });
-
-      if (!sale) return NextResponse.json({ error: "Sale not found" }, { status: 404 });
+      const sale = await getSale(id);
       return NextResponse.json(sale, { status: 200 });
    } catch (e) {
+      if (e instanceof ServiceError) return NextResponse.json({ error: e.message }, { status: e.statusCode });
       return handleError(e);
    }
 }
@@ -27,20 +23,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       if (!isAuthed(user)) return user;
 
       const { id } = await params;
-
-      const sale = await prisma.sale.findUnique({ where: { id } });
-      if (!sale) return NextResponse.json({ error: "Sale not found" }, { status: 404 });
-
-      await prisma.$transaction([
-         prisma.sale.delete({ where: { id } }),
-         prisma.inventory.update({
-            where: { userId_productId: { userId: sale.resellerId, productId: sale.productId } },
-            data: { quantity: { increment: sale.quantity } },
-         }),
-      ]);
+      await deleteSaleAndRestoreStock(id);
 
       return NextResponse.json({ message: "Sale deleted, stock restored" }, { status: 200 });
    } catch (e) {
+      if (e instanceof ServiceError) return NextResponse.json({ error: e.message }, { status: e.statusCode });
       return handleError(e);
    }
 }

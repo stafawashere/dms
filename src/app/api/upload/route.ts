@@ -1,6 +1,14 @@
+import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { put, del } from "@vercel/blob";
 import { requireAuth, isAuthed, handleError } from "@/lib/api-helpers";
+
+const MIME_TO_EXT: Record<string, string> = {
+   "image/jpeg": "jpg",
+   "image/png": "png",
+   "image/webp": "webp",
+   "image/gif": "gif",
+};
 
 export async function POST(req: NextRequest) {
    try {
@@ -23,10 +31,12 @@ export async function POST(req: NextRequest) {
          return NextResponse.json({ error: "File too large (max 5MB)" }, { status: 400 });
       }
 
-      const blob = await put(`thumbnails/${file.name}`, file, {
+      const ext = MIME_TO_EXT[file.type];
+      const key = `thumbnails/${randomUUID()}.${ext}`;
+
+      const blob = await put(key, file, {
          access: "public",
          token: process.env.BLOB_READ_WRITE_TOKEN!,
-         allowOverwrite: true,
       });
 
       return NextResponse.json({ url: blob.url }, { status: 201 });

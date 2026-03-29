@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { requireAuth, isAuthed, handleError } from "@/lib/api-helpers";
+import { ServiceError } from "@/lib/errors";
+import { updateCategory, deleteCategory } from "@/lib/services/category.service";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
    try {
@@ -9,14 +10,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
       const { id } = await params;
       const { name } = await req.json();
-      if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
-
-      const existing = await prisma.category.findUnique({ where: { id: id } });
-      if (!existing) return NextResponse.json({ error: "Category not found" }, { status: 404 });
-
-      const category = await prisma.category.update({ where: { id: id }, data: { name } });
+      const category = await updateCategory(id, name);
       return NextResponse.json(category, { status: 200 });
    } catch (e) {
+      if (e instanceof ServiceError) return NextResponse.json({ error: e.message }, { status: e.statusCode });
       return handleError(e);
    }
 }
@@ -27,12 +24,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       if (!isAuthed(user)) return user;
 
       const { id } = await params;
-      const existing = await prisma.category.findUnique({ where: { id: id } });
-      if (!existing) return NextResponse.json({ error: "Category not found" }, { status: 404 });
-
-      await prisma.category.delete({ where: { id: id } });
+      await deleteCategory(id);
       return NextResponse.json({ message: "Category deleted" }, { status: 200 });
    } catch (e) {
+      if (e instanceof ServiceError) return NextResponse.json({ error: e.message }, { status: e.statusCode });
       return handleError(e);
    }
 }

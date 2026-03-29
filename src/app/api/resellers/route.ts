@@ -1,27 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import bcrypt from "bcryptjs";
 import { requireAuth, isAuthed, handleError } from "@/lib/api-helpers";
+import { ServiceError } from "@/lib/errors";
+import { listResellers, createReseller } from "@/lib/services/reseller.service";
 
 export async function GET() {
    try {
       const user = await requireAuth(true);
       if (!isAuthed(user)) return user;
 
-      const resellers = await prisma.user.findMany({
-         where: { role: "RESELLER" },
-         select: {
-            id: true,
-            name: true,
-            email: true,
-            active: true,
-            createdAt: true,
-            _count: { select: { sales: true, inventory: true } },
-         },
-         orderBy: { createdAt: "desc" },
-      });
+      const resellers = await listResellers();
       return NextResponse.json(resellers, { status: 200 });
    } catch (e) {
+      if (e instanceof ServiceError) return NextResponse.json({ error: e.message }, { status: e.statusCode });
       return handleError(e);
    }
 }
@@ -34,17 +24,11 @@ export async function POST(req: NextRequest) {
       const { name, email, password } = await req.json();
       if (!name || !email || !password) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
-      const exists = await prisma.user.findUnique({ where: { email } });
-      if (exists) return NextResponse.json({ error: "Email already in use" }, { status: 400 });
-
-      const hashed = await bcrypt.hash(password, 10);
-      const reseller = await prisma.user.create({
-         data: { name, email, password: hashed, role: "RESELLER" },
-         select: { id: true, name: true, email: true, active: true, createdAt: true },
-      });
+      const reseller = await createReseller({ name, email, password });
 
       return NextResponse.json(reseller, { status: 201 });
    } catch (e) {
+      if (e instanceof ServiceError) return NextResponse.json({ error: e.message }, { status: e.statusCode });
       return handleError(e);
    }
 }

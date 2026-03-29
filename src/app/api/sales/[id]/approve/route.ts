@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { requireAuth, isAuthed, handleError } from "@/lib/api-helpers";
+import { approveSale } from "@/lib/services/sales.service";
+import { ServiceError } from "@/lib/errors";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
    try {
@@ -8,21 +9,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (!isAuthed(user)) return user;
 
       const { id } = await params;
-
-      const sale = await prisma.sale.findUnique({ where: { id } });
-      if (!sale) return NextResponse.json({ error: "Sale not found" }, { status: 404 });
-      if (sale.status === "APPROVED") {
-         return NextResponse.json({ error: "Sale already approved" }, { status: 400 });
-      }
-
-      const updated = await prisma.sale.update({
-         where: { id },
-         data: { status: "APPROVED" },
-         include: { product: true, reseller: { select: { id: true, name: true, email: true } } },
-      });
+      const updated = await approveSale(id);
 
       return NextResponse.json(updated, { status: 200 });
    } catch (e) {
+      if (e instanceof ServiceError) return NextResponse.json({ error: e.message }, { status: e.statusCode });
       return handleError(e);
    }
 }

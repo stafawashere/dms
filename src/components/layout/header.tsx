@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import MobileSidebar from "./mobile-sidebar";
+import { Role } from "@/generated/prisma/enums";
 
 interface Reseller {
    id: string;
@@ -39,7 +40,7 @@ export default function Header() {
       .toUpperCase() ?? "U";
 
    useEffect(() => {
-      if (session?.user?.role === "ADMIN") {
+      if (session?.user?.role === Role.ADMIN) {
          fetch("/api/resellers")
             .then((res) => res.json())
             .then((data) => setResellers(data.filter((r: Reseller) => r.active)));
@@ -53,7 +54,7 @@ export default function Header() {
          body: JSON.stringify({ userId }),
       });
       if (res.ok) {
-         router.push(role === "ADMIN" ? "/admin/dashboard" : "/reseller/dashboard");
+         router.push(role === Role.ADMIN ? "/admin/dashboard" : "/reseller/dashboard");
          router.refresh();
       }
    };
@@ -82,7 +83,7 @@ export default function Header() {
                   </DropdownMenuLabel>
                </DropdownMenuGroup>
                <DropdownMenuSeparator />
-               {session?.user?.role === "ADMIN" && resellers.length > 0 && (
+               {session?.user?.role === Role.ADMIN && resellers.length > 0 && (
                   <>
                      <DropdownMenuSub>
                         <DropdownMenuSubTrigger>
@@ -91,7 +92,7 @@ export default function Header() {
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="max-h-64 overflow-y-auto">
                            {resellers.map((r) => (
-                              <DropdownMenuItem key={r.id} onClick={() => switchAccount(r.id, "RESELLER")}>
+                              <DropdownMenuItem key={r.id} onClick={() => switchAccount(r.id, Role.RESELLER)}>
                                  <div className="flex flex-col">
                                     <span className="text-sm">{r.name}</span>
                                     <span className="text-xs text-muted-foreground">{r.email}</span>

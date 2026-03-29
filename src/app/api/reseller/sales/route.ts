@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { requireAuth, isAuthed, handleError } from "@/lib/api-helpers";
+import { ServiceError } from "@/lib/errors";
+import { listResellerSales, createSale } from "@/lib/services/sales.service";
 
 export async function GET() {
    try {
       const user = await requireAuth();
       if (!isAuthed(user)) return user;
 
-      const sales = await prisma.sale.findMany({
-         where: { resellerId: user.id },
-         include: { product: true },
-         orderBy: { createdAt: "desc" },
-      });
-
+      const sales = await listResellerSales(user.id);
       return NextResponse.json(sales, { status: 200 });
    } catch (e) {
+      if (e instanceof ServiceError) return NextResponse.json({ error: e.message }, { status: e.statusCode });
       return handleError(e);
    }
 }
@@ -25,31 +22,17 @@ export async function POST(req: NextRequest) {
       if (!isAuthed(user)) return user;
 
       const { productId, quantity, soldPrice, notes } = await req.json();
-      if (!productId || !quantity || soldPrice == null) {
-         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-      }
-
-      const inventory = await prisma.inventory.findUnique({
-         where: { userId_productId: { userId: user.id, productId } },
+      const sale = await createSale({
+         resellerId: user.id,
+         productId,
+         quantity,
+         soldPrice,
+         notes: notes ?? null,
       });
-
-      if (!inventory || inventory.quantity < quantity) {
-         return NextResponse.json({ error: "Insufficient stock" }, { status: 400 });
-      }
-
-      const [sale] = await prisma.$transaction([
-         prisma.sale.create({
-            data: { resellerId: user.id, productId, quantity, soldPrice, notes },
-            include: { product: true },
-         }),
-         prisma.inventory.update({
-            where: { userId_productId: { userId: user.id, productId } },
-            data: { quantity: { decrement: quantity } },
-         }),
-      ]);
 
       return NextResponse.json(sale, { status: 201 });
    } catch (e) {
+      if (e instanceof ServiceError) return NextResponse.json({ error: e.message }, { status: e.statusCode });
       return handleError(e);
    }
 }

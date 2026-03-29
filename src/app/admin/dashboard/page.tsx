@@ -15,6 +15,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MovementType } from "@/generated/prisma/enums";
 import {
    Table,
    TableBody,
@@ -290,7 +291,7 @@ export default function AdminDashboard() {
                                  </TableCell>
                                  <TableCell className="text-muted-foreground">{m.user.name}</TableCell>
                                  <TableCell>
-                                    <Badge variant={m.type === "IN" ? "default" : m.type === "OUT" ? "secondary" : "outline"}>
+                                    <Badge variant={m.type === MovementType.IN ? "default" : m.type === MovementType.OUT ? "secondary" : "outline"}>
                                        {m.type}
                                     </Badge>
                                  </TableCell>

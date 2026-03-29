@@ -2,23 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-   LayoutDashboard,
-   ShoppingCart,
-   History,
-   Warehouse,
-   Package,
-   Plus,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-
-const navItems = [
-   { label: "Dashboard", href: "/reseller/dashboard", icon: LayoutDashboard },
-   { label: "Products", href: "/reseller/products", icon: Package },
-   { label: "Sales", href: "/reseller/sales/history", icon: History },
-   { label: "Inventory", href: "/reseller/inventory", icon: Warehouse },
-];
+import { resellerNavItems } from "./nav-items";
 
 export default function ResellerSidebar() {
    const pathname = usePathname();
@@ -43,7 +30,7 @@ export default function ResellerSidebar() {
                      New Sale
                   </Link>
                </li>
-               {navItems.map((item) => {
+               {resellerNavItems.map((item) => {
                   const active = pathname === item.href || (item.href !== "/reseller/dashboard" && pathname.startsWith(item.href));
                   return (
                      <li key={item.href}>

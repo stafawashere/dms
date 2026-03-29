@@ -3,26 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
-import {
-   LayoutDashboard,
-   ShoppingCart,
-   History,
-   Warehouse,
-   Package,
-   Plus,
-} from "lucide-react";
+import { Menu, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-   { label: "Dashboard", href: "/reseller/dashboard", icon: LayoutDashboard },
-   { label: "Products", href: "/reseller/products", icon: Package },
-   { label: "Sales", href: "/reseller/sales/history", icon: History },
-   { label: "Inventory", href: "/reseller/inventory", icon: Warehouse },
-];
+import { resellerNavItems } from "./nav-items";
 
 export default function ResellerMobileSidebar() {
    const [open, setOpen] = useState(false);
@@ -52,7 +38,7 @@ export default function ResellerMobileSidebar() {
                            New Sale
                         </Link>
                      </li>
-                     {navItems.map((item) => {
+                     {resellerNavItems.map((item) => {
                         const active = pathname === item.href || (item.href !== "/reseller/dashboard" && pathname.startsWith(item.href));
                         return (
                            <li key={item.href}>

@@ -2,27 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-   LayoutDashboard,
-   Package,
-   Warehouse,
-   Users,
-   ShoppingCart,
-   BarChart3,
-   FolderOpen,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-
-const navItems = [
-   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-   { label: "Products", href: "/admin/products", icon: Package },
-   { label: "Categories", href: "/admin/categories", icon: FolderOpen },
-   { label: "Inventory", href: "/admin/inventory", icon: Warehouse },
-   { label: "Resellers", href: "/admin/resellers", icon: Users },
-   { label: "Sales", href: "/admin/sales", icon: ShoppingCart },
-   { label: "Reports", href: "/admin/reports", icon: BarChart3 },
-];
+import { adminNavItems } from "./nav-items";
 
 export default function Sidebar() {
    const pathname = usePathname();
@@ -38,7 +20,7 @@ export default function Sidebar() {
          <Separator className="opacity-40" />
          <nav className="flex-1 px-3 py-4">
             <ul className="flex flex-col gap-1">
-               {navItems.map((item) => {
+               {adminNavItems.map((item) => {
                   const active = pathname.startsWith(item.href);
                   return (
                      <li key={item.href}>

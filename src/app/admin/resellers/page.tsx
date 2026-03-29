@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { formatPrice, formatDate } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 import { Plus, Pencil, UserX, UserCheck, Eye, Trash2, DatabaseZap } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { SearchBar } from "@/components/search-bar";
@@ -25,22 +25,11 @@ import {
    DialogFooter,
    DialogClose,
 } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { ResellerDetailDialog } from "./reseller-detail-dialog";
+import { WipeDialog } from "./wipe-dialog";
 import { cn } from "@/lib/utils";
-
-type Reseller = {
-   id: string;
-   name: string;
-   email: string;
-   active: boolean;
-   createdAt: string;
-   _count: { sales: number; inventory: number };
-};
-
-type ResellerDetail = Reseller & {
-   inventory: { id: string; quantity: number; product: { id: string; name: string; unit: string | null } }[];
-   sales: { id: string; quantity: number; soldPrice: number; createdAt: string; product: { name: string } }[];
-};
+import type { Reseller, ResellerDetail } from "@/types/models";
 
 type ResellerForm = {
    name: string;
@@ -66,7 +55,6 @@ export default function ResellersPage() {
    const [confirmToggle, setConfirmToggle] = useState<Reseller | null>(null);
    const [confirmDelete, setConfirmDelete] = useState<Reseller | null>(null);
    const [wipeTarget, setWipeTarget] = useState<Reseller | null>(null);
-   const [wipeOptions, setWipeOptions] = useState({ sales: false, inventory: false, movements: false });
    const [wiping, setWiping] = useState(false);
 
    useEffect(() => {
@@ -163,28 +151,21 @@ export default function ResellersPage() {
       setEditDialog(true);
    }
 
-   function openWipe(reseller: Reseller) {
-      setWipeTarget(reseller);
-      setWipeOptions({ sales: false, inventory: false, movements: false });
-   }
-
-   async function handleWipe() {
+   async function handleWipe(options: { sales: boolean; inventory: boolean; movements: boolean }) {
       if (!wipeTarget) return;
-      if (!wipeOptions.sales && !wipeOptions.inventory && !wipeOptions.movements) return;
+      if (!options.sales && !options.inventory && !options.movements) return;
       setWiping(true);
 
       await fetch(`/api/resellers/${wipeTarget.id}/wipe`, {
          method: "POST",
          headers: { "Content-Type": "application/json" },
-         body: JSON.stringify(wipeOptions),
+         body: JSON.stringify(options),
       });
 
       setWiping(false);
       setWipeTarget(null);
       fetchResellers();
    }
-
-   const allWipeSelected = wipeOptions.sales && wipeOptions.inventory && wipeOptions.movements;
 
    const filtered = resellers.filter(
       (r) =>
@@ -248,7 +229,7 @@ export default function ResellersPage() {
                                  <Button variant="ghost" size="icon" onClick={() => openEdit(reseller)}>
                                     <Pencil className="h-4 w-4" />
                                  </Button>
-                                 <Button variant="ghost" size="icon" onClick={() => openWipe(reseller)}>
+                                 <Button variant="ghost" size="icon" onClick={() => setWipeTarget(reseller)}>
                                     <DatabaseZap className="h-4 w-4" />
                                  </Button>
                                  <Button variant="ghost" size="icon" onClick={() => setConfirmToggle(reseller)}>
@@ -330,186 +311,46 @@ export default function ResellersPage() {
             </DialogContent>
          </Dialog>
 
-         <Dialog open={detailDialog} onOpenChange={setDetailDialog}>
-            <DialogContent className="max-w-lg">
-               <DialogHeader>
-                  <DialogTitle>{detail?.name}</DialogTitle>
-               </DialogHeader>
-               {detail && (
-                  <div className="flex flex-col gap-4">
-                     <div className="flex items-center gap-4 text-sm">
-                        <span className="text-muted-foreground">{detail.email}</span>
-                        <Badge variant={detail.active ? "default" : "secondary"}>
-                           {detail.active ? "Active" : "Inactive"}
-                        </Badge>
-                     </div>
+         <ResellerDetailDialog
+            open={detailDialog}
+            onOpenChange={setDetailDialog}
+            detail={detail}
+         />
 
-                     <div>
-                        <h3 className="text-sm font-medium mb-2">Inventory ({detail.inventory.length})</h3>
-                        {detail.inventory.length === 0 ? (
-                           <p className="text-sm text-muted-foreground">No inventory assigned</p>
-                        ) : (
-                           <div className="rounded-md border border-border/70">
-                              <Table>
-                                 <TableHeader>
-                                    <TableRow>
-                                       <TableHead>Product</TableHead>
-                                       <TableHead className="text-right">Stock</TableHead>
-                                    </TableRow>
-                                 </TableHeader>
-                                 <TableBody>
-                                    {detail.inventory.map((inv) => (
-                                       <TableRow key={inv.id}>
-                                          <TableCell>{inv.product.name}</TableCell>
-                                          <TableCell className="text-right">
-                                             {inv.quantity} {inv.product.unit ? `${inv.product.unit}(s)` : ""}
-                                          </TableCell>
-                                       </TableRow>
-                                    ))}
-                                 </TableBody>
-                              </Table>
-                           </div>
-                        )}
-                     </div>
-
-                     <div>
-                        <h3 className="text-sm font-medium mb-2">Recent Sales ({detail.sales.length})</h3>
-                        {detail.sales.length === 0 ? (
-                           <p className="text-sm text-muted-foreground">No sales recorded</p>
-                        ) : (
-                           <div className="rounded-md border border-border/70">
-                              <Table>
-                                 <TableHeader>
-                                    <TableRow>
-                                       <TableHead>Product</TableHead>
-                                       <TableHead>Qty</TableHead>
-                                       <TableHead>Price</TableHead>
-                                       <TableHead>Date</TableHead>
-                                    </TableRow>
-                                 </TableHeader>
-                                 <TableBody>
-                                    {detail.sales.map((sale) => (
-                                       <TableRow key={sale.id}>
-                                          <TableCell>{sale.product.name}</TableCell>
-                                          <TableCell>{sale.quantity}</TableCell>
-                                          <TableCell>{formatPrice(sale.soldPrice)}</TableCell>
-                                          <TableCell className="text-muted-foreground">{formatDate(sale.createdAt, false, true)}</TableCell>
-                                       </TableRow>
-                                    ))}
-                                 </TableBody>
-                              </Table>
-                           </div>
-                        )}
-                     </div>
-                  </div>
-               )}
-            </DialogContent>
-         </Dialog>
-
-         <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-            <DialogContent className="sm:max-w-sm">
-               <DialogHeader>
-                  <DialogTitle>Permanently Delete Reseller</DialogTitle>
-               </DialogHeader>
-               <p className="text-sm text-muted-foreground">
+         <ConfirmDialog
+            open={!!confirmDelete}
+            onOpenChange={() => setConfirmDelete(null)}
+            title="Permanently Delete Reseller"
+            description={
+               <>
                   This will permanently delete <span className="font-medium text-foreground">{confirmDelete?.name}</span> and all their sales, inventory, and stock movements. This cannot be undone.
-               </p>
-               <DialogFooter>
-                  <DialogClose render={<Button variant="outline" />}>
-                     Cancel
-                  </DialogClose>
-                  <Button
-                     variant="destructive"
-                     onClick={() => confirmDelete && handlePermanentDelete(confirmDelete)}
-                  >
-                     Delete Permanently
-                  </Button>
-               </DialogFooter>
-            </DialogContent>
-         </Dialog>
+               </>
+            }
+            confirmLabel="Delete Permanently"
+            variant="destructive"
+            onConfirm={() => confirmDelete && handlePermanentDelete(confirmDelete)}
+         />
 
-         <Dialog open={!!confirmToggle} onOpenChange={() => setConfirmToggle(null)}>
-            <DialogContent className="sm:max-w-sm">
-               <DialogHeader>
-                  <DialogTitle>
-                     {confirmToggle?.active ? "Deactivate" : "Reactivate"} Reseller
-                  </DialogTitle>
-               </DialogHeader>
-               <p className="text-sm text-muted-foreground">
-                  {confirmToggle?.active
-                     ? `${confirmToggle.name} will no longer be able to log in or record sales.`
-                     : `${confirmToggle?.name} will be able to log in and record sales again.`}
-               </p>
-               <DialogFooter>
-                  <DialogClose render={<Button variant="outline" />}>
-                     Cancel
-                  </DialogClose>
-                  <Button
-                     variant={confirmToggle?.active ? "destructive" : "default"}
-                     onClick={() => confirmToggle && handleToggleActive(confirmToggle)}
-                  >
-                     {confirmToggle?.active ? "Deactivate" : "Reactivate"}
-                  </Button>
-               </DialogFooter>
-            </DialogContent>
-         </Dialog>
+         <ConfirmDialog
+            open={!!confirmToggle}
+            onOpenChange={() => setConfirmToggle(null)}
+            title={`${confirmToggle?.active ? "Deactivate" : "Reactivate"} Reseller`}
+            description={
+               confirmToggle?.active
+                  ? `${confirmToggle.name} will no longer be able to log in or record sales.`
+                  : `${confirmToggle?.name} will be able to log in and record sales again.`
+            }
+            confirmLabel={confirmToggle?.active ? "Deactivate" : "Reactivate"}
+            variant={confirmToggle?.active ? "destructive" : "default"}
+            onConfirm={() => confirmToggle && handleToggleActive(confirmToggle)}
+         />
 
-         <Dialog open={!!wipeTarget} onOpenChange={() => setWipeTarget(null)}>
-            <DialogContent className="sm:max-w-sm">
-               <DialogHeader>
-                  <DialogTitle>Wipe Data &mdash; {wipeTarget?.name}</DialogTitle>
-               </DialogHeader>
-               <p className="text-sm text-muted-foreground">
-                  Select data to wipe for this reseller. This cannot be undone.
-               </p>
-               <div className="flex flex-col gap-3 py-2">
-                  <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                     <Checkbox
-                        checked={allWipeSelected}
-                        onCheckedChange={(checked) =>
-                           setWipeOptions({ sales: !!checked, inventory: !!checked, movements: !!checked })
-                        }
-                     />
-                     Select All
-                  </label>
-                  <div className="ml-6 flex flex-col gap-3">
-                     <label className="flex items-center gap-2 text-sm cursor-pointer">
-                        <Checkbox
-                           checked={wipeOptions.sales}
-                           onCheckedChange={(checked) => setWipeOptions({ ...wipeOptions, sales: !!checked })}
-                        />
-                        Sales History
-                     </label>
-                     <label className="flex items-center gap-2 text-sm cursor-pointer">
-                        <Checkbox
-                           checked={wipeOptions.inventory}
-                           onCheckedChange={(checked) => setWipeOptions({ ...wipeOptions, inventory: !!checked })}
-                        />
-                        Inventory
-                     </label>
-                     <label className="flex items-center gap-2 text-sm cursor-pointer">
-                        <Checkbox
-                           checked={wipeOptions.movements}
-                           onCheckedChange={(checked) => setWipeOptions({ ...wipeOptions, movements: !!checked })}
-                        />
-                        Stock Movements
-                     </label>
-                  </div>
-               </div>
-               <DialogFooter>
-                  <DialogClose render={<Button variant="outline" />}>
-                     Cancel
-                  </DialogClose>
-                  <Button
-                     variant="destructive"
-                     onClick={handleWipe}
-                     disabled={wiping || (!wipeOptions.sales && !wipeOptions.inventory && !wipeOptions.movements)}
-                  >
-                     {wiping ? "Wiping..." : "Wipe Selected Data"}
-                  </Button>
-               </DialogFooter>
-            </DialogContent>
-         </Dialog>
+         <WipeDialog
+            target={wipeTarget}
+            onClose={() => setWipeTarget(null)}
+            onWipe={handleWipe}
+            wiping={wiping}
+         />
       </div>
    );
 }

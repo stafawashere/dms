@@ -46,6 +46,9 @@ model Product {
    createdAt      DateTime        @default(now())
    updatedAt      DateTime        @updatedAt
    stockMovements StockMovement[]
+
+   @@index([categoryId])
+   @@index([active])
 }
 
 model PriceTier {
@@ -69,6 +72,8 @@ model Inventory {
    updatedAt DateTime @updatedAt
 
    @@unique([userId, productId])
+   @@index([userId])
+   @@index([productId])
 }
 
 model Sale {
@@ -82,6 +87,11 @@ model Sale {
    notes      String?
    status     SaleStatus @default(PENDING)
    createdAt  DateTime   @default(now())
+
+   @@index([resellerId])
+   @@index([status])
+   @@index([createdAt])
+   @@index([productId])
 }
 
 model StockMovement {
@@ -96,6 +106,11 @@ model StockMovement {
    user          User         @relation("AffectedUser", fields: [userId], references: [id])
    userId        String
    createdAt     DateTime     @default(now())
+
+   @@index([productId])
+   @@index([performedById])
+   @@index([userId])
+   @@index([createdAt])
 }
 
 enum MovementType {

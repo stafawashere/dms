@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { formatPrice, unitLabel } from "@/lib/formatters";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { usePricingCalculator } from "@/hooks/use-pricing-calculator";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+   Dialog,
+   DialogContent,
+   DialogHeader,
+   DialogTitle,
+} from "@/components/ui/dialog";
 import {
    Select,
    SelectContent,
@@ -17,34 +21,39 @@ import {
 } from "@/components/ui/select";
 import { ExpandingTextarea } from "@/components/expanding-textarea";
 import { cn } from "@/lib/utils";
-import type { InventoryItem } from "@/types/models";
-import { usePricingCalculator } from "@/hooks/use-pricing-calculator";
+import type { ResellerSale, InventoryItem } from "@/types/models";
 
-export default function NewSalePage() {
-   const router = useRouter();
-   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-   const [loading, setLoading] = useState(true);
+type NewSaleDialogProps = {
+   open: boolean;
+   onOpenChange: (open: boolean) => void;
+   inventory: InventoryItem[];
+   invLoading: boolean;
+   onSaleCreated: (sale: ResellerSale) => void;
+   onInventoryUpdate: (productId: string, quantitySold: number) => void;
+};
+
+export function NewSaleDialog({
+   open,
+   onOpenChange,
+   inventory,
+   invLoading,
+   onSaleCreated,
+   onInventoryUpdate,
+}: NewSaleDialogProps) {
    const [productId, setProductId] = useState("");
    const pricing = usePricingCalculator();
    const [notes, setNotes] = useState("");
    const [submitting, setSubmitting] = useState(false);
    const [error, setError] = useState("");
-   const [success, setSuccess] = useState(false);
-
-   useEffect(() => {
-      let ignore = false;
-      fetch("/api/reseller/inventory")
-         .then((r) => r.json())
-         .then((data) => {
-            if (!ignore) {
-               setInventory(data.filter((i: InventoryItem) => i.quantity > 0));
-               setLoading(false);
-            }
-         });
-      return () => { ignore = true; };
-   }, []);
 
    const selected = inventory.find((i) => i.product.id === productId);
+
+   function resetForm() {
+      setProductId("");
+      pricing.reset();
+      setNotes("");
+      setError("");
+   }
 
    function handleProductChange(id: string | null) {
       if (!id) return;
@@ -77,27 +86,29 @@ export default function NewSalePage() {
          return;
       }
 
-      setSuccess(true);
+      const newSale = await res.json();
+      onSaleCreated(newSale);
+      onInventoryUpdate(productId, parseInt(pricing.quantity));
+      resetForm();
       setSubmitting(false);
-      setTimeout(() => router.push("/reseller/sales/history"), 1000);
+      onOpenChange(false);
    }
 
-   if (loading) return <div className="p-6 text-muted-foreground">Loading...</div>;
+   function handleOpenChange(nextOpen: boolean) {
+      onOpenChange(nextOpen);
+      if (!nextOpen) resetForm();
+   }
 
    return (
-      <div className="max-w-lg mx-auto">
-         <PageHeader title="New Sale" description="Record a product sale" />
-
-         {success ? (
-            <Card className="mt-6">
-               <CardContent className="py-8 text-center">
-                  <p className="text-lg font-medium text-green-500">Sale recorded</p>
-                  <p className="text-sm text-muted-foreground mt-1">Redirecting to history...</p>
-               </CardContent>
-            </Card>
-         ) : (
-            <Card className="mt-6">
-               <CardContent className="flex flex-col gap-4 my-1">
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+         <DialogContent className="max-w-md">
+            <DialogHeader>
+               <DialogTitle>New Sale</DialogTitle>
+            </DialogHeader>
+            {invLoading ? (
+               <div className="py-8 text-center text-muted-foreground">Loading inventory...</div>
+            ) : (
+               <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2">
                      <Label>Product</Label>
                      <Select value={productId} onValueChange={handleProductChange}>
@@ -254,9 +265,9 @@ export default function NewSalePage() {
                   >
                      {submitting ? "Recording..." : "Record Sale"}
                   </Button>
-               </CardContent>
-            </Card>
-         )}
-      </div>
+               </div>
+            )}
+         </DialogContent>
+      </Dialog>
    );
 }

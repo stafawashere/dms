@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { encode } from "next-auth/jwt";
 import { requireAuth, isAuthed, handleError } from "@/lib/api-helpers";
+import { Role } from "@/generated/prisma/enums";
 
 export async function POST(req: NextRequest) {
    try {
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
 
       if (adminCookie) {
          const originalAdmin = await prisma.user.findUnique({
-            where: { id: adminCookie, role: "ADMIN" },
+            where: { id: adminCookie, role: Role.ADMIN },
             select: { id: true },
          });
          if (!originalAdmin) {
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
          maxAge: 30 * 24 * 60 * 60,
       });
 
-      if (user.role !== "ADMIN" && !adminCookie) {
+      if (user.role !== Role.ADMIN && !adminCookie) {
          response.cookies.set("dms-admin-id", adminId, {
             httpOnly: false,
             secure: isSecure,
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
          });
       }
 
-      if (user.role === "ADMIN") {
+      if (user.role === Role.ADMIN) {
          response.cookies.delete("dms-admin-id");
       }
 

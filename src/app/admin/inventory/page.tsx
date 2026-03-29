@@ -34,36 +34,14 @@ import {
 } from "@/components/ui/select";
 import { ExpandingTextarea } from "@/components/expanding-textarea";
 import { cn } from "@/lib/utils";
-
-type UserInfo = {
-   id: string;
-   name: string;
-   email: string;
-   role: string;
-};
-
-type Product = {
-   id: string;
-   name: string;
-   unit: string | null;
-   category: { id: string; name: string };
-};
-
-type InventoryRecord = {
-   id: string;
-   userId: string;
-   productId: string;
-   quantity: number;
-   updatedAt: string;
-   user: UserInfo;
-   product: Product;
-};
+import { Role, MovementType } from "@/generated/prisma/enums";
+import type { UserInfo, InventoryProduct as Product, InventoryRecord } from "@/types/models";
 
 type TransferForm = {
    productId: string;
    userId: string;
    quantity: string;
-   type: "IN" | "OUT" | "ADJUSTMENT";
+   type: MovementType;
    note: string;
 };
 
@@ -71,7 +49,7 @@ const emptyTransfer: TransferForm = {
    productId: "",
    userId: "",
    quantity: "",
-   type: "IN",
+   type: MovementType.IN,
    note: "",
 };
 
@@ -251,7 +229,7 @@ export default function InventoryPage() {
                            </TableCell>
                            <TableCell>{inv.user.name}</TableCell>
                            <TableCell>
-                              <Badge variant={inv.user.role === "ADMIN" ? "default" : "secondary"}>
+                              <Badge variant={inv.user.role === Role.ADMIN ? "default" : "secondary"}>
                                  {inv.user.role}
                               </Badge>
                            </TableCell>
@@ -332,17 +310,17 @@ export default function InventoryPage() {
                         <Label>Type</Label>
                         <Select
                            value={form.type}
-                           onValueChange={(val) => updateForm("type", val ?? "IN")}
+                           onValueChange={(val) => updateForm("type", val ?? MovementType.IN)}
                         >
                            <SelectTrigger className="w-full">
                               <SelectValue>
-                                 {form.type === "IN" ? "Add Stock" : form.type === "OUT" ? "Remove Stock" : "Adjustment"}
+                                 {form.type === MovementType.IN ? "Add Stock" : form.type === MovementType.OUT ? "Remove Stock" : "Adjustment"}
                               </SelectValue>
                            </SelectTrigger>
                            <SelectContent>
-                              <SelectItem value="IN">Add Stock</SelectItem>
-                              <SelectItem value="OUT">Remove Stock</SelectItem>
-                              <SelectItem value="ADJUSTMENT">Adjustment</SelectItem>
+                              <SelectItem value={MovementType.IN}>Add Stock</SelectItem>
+                              <SelectItem value={MovementType.OUT}>Remove Stock</SelectItem>
+                              <SelectItem value={MovementType.ADJUSTMENT}>Adjustment</SelectItem>
                            </SelectContent>
                         </Select>
                      </div>

@@ -67,20 +67,31 @@ export default function ReportsPage() {
          .catch(() => setLoading(false));
    }, []);
 
-   useEffect(() => {
-      if (preset === "all") {
+   function selectPreset(value: Preset) {
+      setPreset(value);
+      if (value === "all") {
          fetchData();
-      } else if (preset === "custom") {
+      } else if (value === "custom") {
          fetchData(fromDate, toDate);
       } else {
-         const days = preset === "7d" ? 7 : preset === "90d" ? 90 : 30;
+         const days = value === "7d" ? 7 : value === "90d" ? 90 : 30;
          const from = daysAgo(days);
          const to = today();
          setFromDate(from);
          setToDate(to);
          fetchData(from, to);
       }
-   }, [preset, fetchData]);
+   }
+
+   useEffect(() => {
+      const params = new URLSearchParams();
+      params.set("from", fromDate);
+      params.set("to", toDate);
+      fetch(`/api/admin/reports?${params}`)
+         .then((r) => r.json())
+         .then((d) => { setData(d); setLoading(false); })
+         .catch(() => setLoading(false));
+   }, []);
 
    function applyCustomRange() {
       fetchData(fromDate, toDate);
@@ -103,7 +114,7 @@ export default function ReportsPage() {
                {presets.map((p) => (
                   <button
                      key={p.value}
-                     onClick={() => setPreset(p.value)}
+                     onClick={() => selectPreset(p.value)}
                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                         preset === p.value
                            ? "bg-primary text-primary-foreground"
@@ -116,8 +127,8 @@ export default function ReportsPage() {
             </div>
             {preset === "custom" && (
                <div className="flex items-end gap-2">
-                  <div>
-                     <label className="text-xs text-muted-foreground mb-1 block">From</label>
+                  <div className="relative">
+                     <label className="absolute -top-5 left-0 text-xs text-muted-foreground">From</label>
                      <Input
                         type="date"
                         value={fromDate}
@@ -125,8 +136,8 @@ export default function ReportsPage() {
                         className="w-[150px] h-9"
                      />
                   </div>
-                  <div>
-                     <label className="text-xs text-muted-foreground mb-1 block">To</label>
+                  <div className="relative">
+                     <label className="absolute -top-5 left-0 text-xs text-muted-foreground">To</label>
                      <Input
                         type="date"
                         value={toDate}
@@ -134,7 +145,7 @@ export default function ReportsPage() {
                         className="w-[150px] h-9"
                      />
                   </div>
-                  <Button size="sm" onClick={applyCustomRange}>Apply</Button>
+                  <Button size="sm" className="h-9" onClick={applyCustomRange}>Apply</Button>
                </div>
             )}
          </div>

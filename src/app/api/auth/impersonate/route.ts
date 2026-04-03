@@ -14,10 +14,13 @@ export async function POST(req: NextRequest) {
             where: { id: adminCookie, role: Role.ADMIN },
             select: { id: true },
          });
-         if (!originalAdmin) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+         if (originalAdmin) {
+            adminId = originalAdmin.id;
+         } else {
+            const admin = await requireAuth(true);
+            if (!isAuthed(admin)) return admin;
+            adminId = admin.id;
          }
-         adminId = originalAdmin.id;
       } else {
          const admin = await requireAuth(true);
          if (!isAuthed(admin)) return admin;
